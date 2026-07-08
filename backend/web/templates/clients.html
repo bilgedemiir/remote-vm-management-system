@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="mb-1">Clients</h2>
+<p class="text-muted">Kayıtlı istemcileri bu sayfadan görüntüleyebilirsiniz.</p>
+
+<hr>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Hostname</th>
+                    <th>IP Address</th>
+                    <th>Operating System</th>
+                    <th>Status</th>
+                    <th>First Seen</th>
+                    <th>Last Seen</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for client in clients %}
+                <tr>
+                    <td>{{ client.id }}</td>
+                    <td>
+                        <a href="/clients/{{ client.id }}" class="text-decoration-none fw-semibold">
+                            {{ client.hostname }}
+                        </a>
+                    </td>
+                    <td>{{ client.ip_address }}</td>
+                    <td>{{ client.operating_system }}</td>
+                    <td>
+                        {% if client.status == "online" %}
+                            <span class="badge bg-success">Online</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Offline</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ client.first_seen }}</td>
+                    <td>{{ client.last_seen }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted">
+                        Henüz kayıtlı client yok.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="mb-1">Dashboard</h2>
+<p class="text-muted">Sistemin genel durumunu buradan takip edebilirsiniz.</p>
+
+<hr>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Toplam Client</h5>
+                <h2>{{ total_clients }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

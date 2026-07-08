@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="mb-1">Client Detail</h2>
+<p class="text-muted">Seçilen istemciye ait bilgiler aşağıda gösterilmektedir.</p>
+
+<hr>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header">
+        Client Bilgileri
+    </div>
+
+    <div class="card-body">
+        <p><strong>ID:</strong> {{ client.id }}</p>
+        <p><strong>Hostname:</strong> {{ client.hostname }}</p>
+        <p><strong>IP Address:</strong> {{ client.ip_address }}</p>
+        <p><strong>Operating System:</strong> {{ client.operating_system }}</p>
+        <p>
+            <strong>Status:</strong>
+            {% if client.status == "online" %}
+                <span class="badge bg-success">Online</span>
+            {% else %}
+                <span class="badge bg-secondary">Offline</span>
+            {% endif %}
+        </p>
+        <p><strong>First Seen:</strong> {{ client.first_seen }}</p>
+        <p><strong>Last Seen:</strong> {{ client.last_seen }}</p>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header">
+        Komut Geçmişi
+    </div>
+
+    <div class="card-body">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Komut</th>
+                    <th>Durum</th>
+                    <th>Sonuç</th>
+                    <th>Oluşturulma</th>
+                    <th>Tamamlanma</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for command in commands %}
+                <tr>
+                    <td>{{ command.id }}</td>
+                    <td>{{ command.command_text }}</td>
+                    <td>{{ command.status }}</td>
+                    <td>{{ command.result }}</td>
+                    <td>{{ command.created_at }}</td>
+                    <td>{{ command.completed_at }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted">
+                        Bu client için henüz komut geçmişi bulunmuyor.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<br>
+
+<a href="/clients" class="btn btn-secondary">Client Listesine Dön</a>
+
+{% endblock %}
