@@ -7,7 +7,7 @@ Sistem temelde iki parçadan oluşuyor: Merkezde her şeyi yönettiğimiz Flask 
 ## Neler Yapabiliyor?
 
 * Anlık İzleme: Ajan yüklü makinelerin CPU, RAM, Disk ve ağ kullanımlarını panelden canlı olarak takip edebilirsiniz.
-* Uzaktan Komut Çalıştırma: Arayüz üzerinden istediğiniz makineye komut veya script gönderip, sonuçlarını direkt merkezden görebilirsiniz (SOC ve merkezi yönetim altyapısı mantığıyla kurgulandı).
+* Yapay Zeka Destekli Uzaktan Komut Çalıştırma: Arayüz üzerinden istediğiniz makineye kendi yazdığınız komutları gönderebileceğiniz gibi, sisteme entegre yapay zekaya anında ihtiyacınıza uygun script ürettirip hedef makinede çalıştırabilirsiniz. Sonuçları direkt merkezden görebilirsiniz (Yeni nesil SOC ve merkezi yönetim altyapısı mantığıyla kurgulandı).
 * Bağımsız İstemci: Ajan kodunu PyInstaller ile tek bir `.exe` haline getirebiliyoruz. Hedef makinede Python kurulu olmasına gerek kalmadan direkt çalışıyor.
 * Veritabanı Kaydı: Kullanıcı oturumları, makine bilgileri ve çalıştırılan komutların logları MySQL üzerinde güvenle tutuluyor.
 
