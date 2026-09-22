@@ -1,0 +1,552 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="history-page-header">
+
+    <div>
+
+        <span class="page-eyebrow">
+            Script Yönetimi
+        </span>
+
+        <h2 class="mb-1">
+            Script Geçmişi
+        </h2>
+
+        <p class="text-muted mb-0">
+
+            <strong>
+                {{ client.hostname }}
+            </strong>
+
+            istemcisinde çalıştırılan PowerShell
+            scriptlerini görüntüleyin.
+
+        </p>
+
+    </div>
+
+    <div class="history-header-actions">
+
+        <a
+            href="{{ url_for(
+                'client.client_detail',
+                client_id=client.id
+            ) }}"
+            class="btn btn-outline-secondary"
+        >
+            İstemci Detayı
+        </a>
+
+        {% if client.status == "online" %}
+
+            <a
+                href="{{ url_for(
+                    'script_execution.execute_script_central',
+                    client_id=client.id
+                ) }}"
+                class="btn btn-primary"
+            >
+                Yeni Script
+            </a>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<div class="card history-filter-card mb-4">
+
+    <div class="card-body">
+
+        <form
+            method="GET"
+            action="{{ url_for(
+                'script_execution.execution_history',
+                client_id=client.id
+            ) }}"
+        >
+
+            <div class="row g-3 align-items-end">
+
+                <div class="col-xl-6">
+
+                    <label
+                        for="historySearch"
+                        class="form-label"
+                    >
+                        Script Kaydı Ara
+                    </label>
+
+                    <input
+                        type="text"
+                        id="historySearch"
+                        name="search"
+                        class="form-control"
+                        value="{{ filters.search }}"
+                        placeholder="Execution ID, kullanıcı veya script içeriği"
+                    >
+
+                </div>
+
+                <div class="col-sm-6 col-xl-2">
+
+                    <label
+                        for="historyStatus"
+                        class="form-label"
+                    >
+                        Durum
+                    </label>
+
+                    <select
+                        id="historyStatus"
+                        name="status"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            Tüm durumlar
+                        </option>
+
+                        {% for value, label in [
+                            ("pending", "Bekliyor"),
+                            ("assigned", "Atandı"),
+                            ("running", "Çalışıyor"),
+                            ("completed", "Tamamlandı"),
+                            ("failed", "Başarısız")
+                        ] %}
+
+                            <option
+                                value="{{ value }}"
+                                {% if filters.status == value %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ label }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <div class="col-sm-6 col-xl-2">
+
+                    <label
+                        for="historyPerPage"
+                        class="form-label"
+                    >
+                        Sayfa Başına
+                    </label>
+
+                    <select
+                        id="historyPerPage"
+                        name="per_page"
+                        class="form-select"
+                    >
+
+                        {% for amount in [10, 25, 50] %}
+
+                            <option
+                                value="{{ amount }}"
+                                {% if filters.per_page == amount %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ amount }} kayıt
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <div class="col-xl-2">
+
+                    <div class="history-filter-actions">
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                        >
+                            Filtrele
+                        </button>
+
+                        <a
+                            href="{{ url_for(
+                                'script_execution.execution_history',
+                                client_id=client.id
+                            ) }}"
+                            class="btn btn-outline-secondary"
+                        >
+                            Temizle
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<div class="card history-list-card">
+
+    <div class="card-header">
+
+        <div>
+
+            <h5 class="mb-1">
+                Çalıştırma Kayıtları
+            </h5>
+
+            <p class="text-muted small mb-0">
+                İstemciye gönderilen scriptlerin durum ve
+                sonuç bilgileri
+            </p>
+
+        </div>
+
+        <div class="record-count-pill">
+
+            <span class="record-count-value">
+                {{ pagination.total_records }}
+            </span>
+
+            <span>
+                kayıt
+            </span>
+
+        </div>
+
+    </div>
+
+    <div class="card-body p-0">
+
+        <div class="table-responsive history-table-wrapper">
+
+            <table class="table table-hover align-middle">
+
+                <thead>
+
+                    <tr>
+                        <th class="ps-4">
+                            ID
+                        </th>
+
+                        <th>
+                            Kullanıcı
+                        </th>
+
+                        <th>
+                            Script Önizleme
+                        </th>
+
+                        <th>
+                            Durum
+                        </th>
+
+                        <th>
+                            Exit Code
+                        </th>
+
+                        <th>
+                            Kuyruğa Alınma
+                        </th>
+
+                        <th>
+                            Tamamlanma
+                        </th>
+
+                        <th class="text-end pe-4">
+                            İşlem
+                        </th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for execution in executions %}
+
+                        <tr>
+
+                            <td class="ps-4">
+
+                                <span class="execution-id">
+                                    #{{ execution.id }}
+                                </span>
+
+                            </td>
+
+                            <td>
+
+                                <div class="history-user">
+
+                                    <span class="history-user-mark">
+
+                                        {{ execution.username[0] | upper
+                                            if execution.username
+                                            else "?"
+                                        }}
+
+                                    </span>
+
+                                    <span>
+                                        {{ execution.username or "—" }}
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                <div class="history-script-preview">
+
+                                    <code>
+                                        {{ execution.script_content[:100] }}
+                                        {% if execution.script_content | length > 100 %}
+                                            ...
+                                        {% endif %}
+                                    </code>
+
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                {% if execution.status == "completed" %}
+
+                                    <span class="status-badge status-completed">
+                                        Tamamlandı
+                                    </span>
+
+                                {% elif execution.status == "failed" %}
+
+                                    <span class="status-badge status-failed">
+                                        Başarısız
+                                    </span>
+
+                                {% elif execution.status == "running" %}
+
+                                    <span class="status-badge status-running">
+                                        Çalışıyor
+                                    </span>
+
+                                {% elif execution.status == "assigned" %}
+
+                                    <span class="status-badge status-assigned">
+                                        Atandı
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="status-badge status-pending">
+                                        Bekliyor
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                {% if execution.exit_code is not none %}
+
+                                    <code class="exit-code">
+                                        {{ execution.exit_code }}
+                                    </code>
+
+                                {% else %}
+
+                                    <span class="text-muted">
+                                        —
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td class="text-nowrap">
+                                {{ execution.queued_at or "—" }}
+                            </td>
+
+                            <td class="text-nowrap">
+                                {{ execution.finished_at or "—" }}
+                            </td>
+
+                            <td class="text-end pe-4">
+
+                                <a
+                                    href="{{ url_for(
+                                        'script_execution.execution_detail',
+                                        execution_id=execution.id
+                                    ) }}"
+                                    class="btn btn-sm btn-outline-primary"
+                                >
+                                    Detay
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                    {% else %}
+
+                        <tr>
+
+                            <td
+                                colspan="8"
+                                class="py-5"
+                            >
+
+                                <div class="empty-state">
+
+                                    <span class="empty-state-mark">
+                                        &gt;_
+                                    </span>
+
+                                    <strong>
+                                        Script kaydı bulunamadı
+                                    </strong>
+
+                                    <span>
+                                        Arama veya filtre kriterlerini
+                                        değiştirerek tekrar deneyin.
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+{% if pagination.total_pages > 1 %}
+
+<div class="client-pagination">
+
+    <div class="client-pagination-summary">
+
+        Toplam
+        <strong>
+            {{ pagination.total_records }}
+        </strong>
+        kayıt — Sayfa
+        <strong>
+            {{ pagination.page }}
+        </strong>
+        / {{ pagination.total_pages }}
+
+    </div>
+
+    <nav aria-label="Script geçmişi sayfaları">
+
+        <ul class="pagination mb-0">
+
+            <li class="page-item
+                {% if not pagination.has_previous %}
+                    disabled
+                {% endif %}
+            ">
+
+                <a
+                    class="page-link"
+                    href="{{ url_for(
+                        'script_execution.execution_history',
+                        client_id=client.id,
+                        page=pagination.page - 1,
+                        per_page=filters.per_page,
+                        search=filters.search,
+                        status=filters.status
+                    ) }}"
+                >
+                    Önceki
+                </a>
+
+            </li>
+
+            {% for page_number in range(
+                start_page,
+                end_page + 1
+            ) %}
+
+                <li class="page-item
+                    {% if page_number == pagination.page %}
+                        active
+                    {% endif %}
+                ">
+
+                    <a
+                        class="page-link"
+                        href="{{ url_for(
+                            'script_execution.execution_history',
+                            client_id=client.id,
+                            page=page_number,
+                            per_page=filters.per_page,
+                            search=filters.search,
+                            status=filters.status
+                        ) }}"
+                    >
+                        {{ page_number }}
+                    </a>
+
+                </li>
+
+            {% endfor %}
+
+            <li class="page-item
+                {% if not pagination.has_next %}
+                    disabled
+                {% endif %}
+            ">
+
+                <a
+                    class="page-link"
+                    href="{{ url_for(
+                        'script_execution.execution_history',
+                        client_id=client.id,
+                        page=pagination.page + 1,
+                        per_page=filters.per_page,
+                        search=filters.search,
+                        status=filters.status
+                    ) }}"
+                >
+                    Sonraki
+                </a>
+
+            </li>
+
+        </ul>
+
+    </nav>
+
+</div>
+
+{% endif %}
+
+{% endblock %}

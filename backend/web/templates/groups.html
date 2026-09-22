@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">
+            Client Grupları
+        </h2>
+
+        <p class="text-muted mb-0">
+            Client gruplarını yönetin.
+        </p>
+    </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Kapat">
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0">
+            Yeni Grup Oluştur
+        </h5>
+    </div>
+
+    <div class="card-body">
+        <form
+            method="POST"
+            action="{{ url_for('groups.create_group') }}"
+        >
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            >
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">
+                        Grup Adı
+                    </label>
+
+                    <input
+                        type="text"
+                        name="name"
+                        class="form-control"
+                        required
+                    >
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">
+                        Açıklama
+                    </label>
+
+                    <input
+                        type="text"
+                        name="description"
+                        class="form-control"
+                    >
+                </div>
+
+                <div class="col-md-2 d-grid">
+                    <label class="form-label invisible">
+                        Kaydet
+                    </label>
+
+                    <button
+                        class="btn btn-success"
+                        type="submit"
+                    >
+                        Oluştur
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0">
+            Gruplar
+        </h5>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">ID</th>
+                        <th>Grup</th>
+                        <th>Açıklama</th>
+                        <th class="pe-4 group-actions-column">İşlemler</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for group in groups %}
+                    <tr>
+                        <td class="ps-4">
+                            {{ group.id }}
+                        </td>
+
+                        <td>
+                            <strong class="fw-semibold">
+                                {{ group.name }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {{ group.description or "-" }}
+                        </td>
+
+                        <td class="pe-4">
+                            <button
+                                class="btn btn-sm btn-primary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#edit{{ group.id }}"
+                            >
+                                Düzenle
+                            </button>
+
+                            <form
+                                method="POST"
+                                action="{{ url_for('groups.delete_group', group_id=group.id) }}"
+                                class="d-inline delete-group-form"
+                            >
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                >
+                                <button
+                                    class="btn btn-sm btn-outline-danger"
+                                    type="submit"
+                                >
+                                    Sil
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+
+                    <div
+                        class="modal fade"
+                        id="edit{{ group.id }}"
+                        tabindex="-1"
+                        aria-hidden="true"
+                    >
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form
+                                    method="POST"
+                                    action="{{ url_for('groups.update_group', group_id=group.id) }}"
+                                >
+                                    <input
+                                        type="hidden"
+                                        name="csrf_token"
+                                        value="{{ csrf_token() }}"
+                                    >
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">
+                                            Grubu Düzenle
+                                        </h5>
+
+                                        <button
+                                            type="button"
+                                            class="btn-close"
+                                            data-bs-dismiss="modal"
+                                            aria-label="Kapat">
+                                        </button>
+                                    </div>
+
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">
+                                                Grup Adı
+                                            </label>
+
+                                            <input
+                                                class="form-control"
+                                                name="name"
+                                                value="{{ group.name }}"
+                                                required
+                                            >
+                                        </div>
+
+                                        <div class="mb-4">
+                                            <label class="form-label">
+                                                Açıklama
+                                            </label>
+
+                                            <input
+                                                class="form-control"
+                                                name="description"
+                                                value="{{ group.description or '' }}"
+                                            >
+                                        </div>
+
+                                        <div class="border-top pt-3">
+                                            {% set members = group_members.get(group.id, []) %}
+
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <h6 class="mb-0">
+                                                    Grup Üyeleri
+                                                </h6>
+
+                                                <span class="badge bg-secondary">
+                                                    {{ members|length }} üye
+                                                </span>
+                                            </div>
+
+                                            {% if members %}
+                                                <div class="list-group">
+                                                    {% for member in members %}
+                                                        <div class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-3">
+                                                            <div>
+                                                                <div class="fw-semibold">
+                                                                    {{ member.hostname }}
+                                                                </div>
+
+                                                                <div class="small text-muted">
+                                                                    {{ member.ip_address or "IP bilgisi yok" }}
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                {% if member.status == "online" %}
+                                                                    <span class="badge bg-success">
+                                                                        Online
+                                                                    </span>
+                                                                {% else %}
+                                                                    <span class="badge bg-secondary">
+                                                                        Offline
+                                                                    </span>
+                                                                {% endif %}
+
+                                                                <button
+                                                                    type="submit"
+                                                                    class="btn btn-sm btn-outline-danger remove-group-member"
+                                                                    formaction="{{ url_for('groups.remove_member', group_id=group.id, client_id=member.id) }}"
+                                                                    formmethod="POST"
+                                                                    formnovalidate
+                                                                    data-hostname="{{ member.hostname }}"
+                                                                >
+                                                                    Gruptan Çıkar
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <div class="text-muted small">
+                                                    Bu grupta henüz istemci bulunmuyor.
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="modal-footer">
+                                        <button
+                                            class="btn btn-secondary"
+                                            data-bs-dismiss="modal"
+                                            type="button"
+                                        >
+                                            Vazgeç
+                                        </button>
+
+                                        <button
+                                            class="btn btn-primary"
+                                            type="submit"
+                                        >
+                                            Kaydet
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <tr>
+                        <td
+                            colspan="4"
+                            class="text-center text-muted py-4"
+                        >
+                            Grup bulunamadı.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block page_scripts %}
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/groups.js'
+    ) }}"
+></script>
+
+{% endblock %}

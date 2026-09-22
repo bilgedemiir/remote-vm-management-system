@@ -2,76 +2,3553 @@
 
 {% block content %}
 
-<h2 class="mb-1">Client Detail</h2>
-<p class="text-muted">Seçilen istemciye ait bilgiler aşağıda gösterilmektedir.</p>
+{% with messages = get_flashed_messages(
+    with_categories=true
+) %}
 
-<hr>
+    {% if messages %}
 
+        <div class="client-detail-alerts">
+
+            {% for category, message in messages %}
+
+                <div
+                    class="alert alert-{{ category }} alert-dismissible fade show"
+                    role="alert"
+                >
+                    {{ message }}
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Kapat"
+                    >
+                    </button>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+{% endwith %}
+
+
+<div class="client-detail-header">
+
+    <div class="client-detail-identity">
+
+        <div class="client-detail-avatar">
+
+            {{ client.hostname[0] | upper
+                if client.hostname
+                else "?"
+            }}
+
+        </div>
+
+        <div>
+
+            <span class="page-eyebrow">
+                İstemci Detayı
+            </span>
+
+            <h2 class="mb-1">
+                {{ client.hostname }}
+            </h2>
+
+            <div class="client-detail-meta">
+
+                <span>
+                    IP:
+                    <code>
+                        {{ client.ip_address or "—" }}
+                    </code>
+                </span>
+
+                <span class="client-meta-separator">
+                    •
+                </span>
+
+                <span>
+                    UUID:
+                    <code>
+                        {{ client.uuid or "—" }}
+                    </code>
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="client-detail-header-actions">
+
+        {% if client.status == "online" %}
+
+            <span class="client-status online client-detail-status">
+
+                <span class="client-status-dot">
+                </span>
+
+                Çevrimiçi
+
+            </span>
+
+        {% else %}
+
+            <span class="client-status offline client-detail-status">
+
+                <span class="client-status-dot">
+                </span>
+
+                Çevrimdışı
+
+            </span>
+
+        {% endif %}
+
+        <a
+            href="{{ url_for('client.clients') }}"
+            class="btn btn-outline-secondary"
+        >
+            İstemci Listesine Dön
+        </a>
+
+    </div>
+
+</div>
+
+<!-- TEMEL BİLGİLER -->
 <div class="card shadow-sm mb-4">
-    <div class="card-header">
-        Client Bilgileri
+    <div class="card-header fw-semibold">
+        Genel Bilgiler
     </div>
 
     <div class="card-body">
-        <p><strong>ID:</strong> {{ client.id }}</p>
-        <p><strong>Hostname:</strong> {{ client.hostname }}</p>
-        <p><strong>IP Address:</strong> {{ client.ip_address }}</p>
-        <p><strong>Operating System:</strong> {{ client.operating_system }}</p>
-        <p>
-            <strong>Status:</strong>
-            {% if client.status == "online" %}
-                <span class="badge bg-success">Online</span>
-            {% else %}
-                <span class="badge bg-secondary">Offline</span>
+        <div class="row g-3">
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100 info-card">
+                    <small class="text-muted">
+                        Hostname
+                    </small>
+
+                    <div class="fw-semibold mt-1">
+                        {{ client.hostname or "—" }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100 info-card">
+                    <small class="text-muted">
+                        IPv4 Adresi
+                    </small>
+
+                    <div class="fw-semibold mt-1">
+                        {{ client.ip_address or "—" }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100 info-card">
+                    <small class="text-muted">
+                        İşletim Sistemi
+                    </small>
+
+                    <div class="fw-semibold mt-1">
+                        {{ client.windows_version or "—" }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100 info-card">
+                    <small class="text-muted">
+                        Oturum Açan Kullanıcı
+                    </small>
+
+                    <div class="fw-semibold mt-1">
+                        {{ client.logged_in_user or "—" }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100 info-card">
+                    <small class="text-muted">
+                        Kayıt Tarihi
+                    </small>
+
+                    <div class="fw-semibold mt-1">
+                        {% if client.registered_at %}
+                            {{ client.registered_at.strftime('%d.%m.%Y') }}<br>
+                            <small class="text-muted">{{ client.registered_at.strftime('%H:%M') }}</small>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100 info-card">
+                    <small class="text-muted">
+                        Son Görülme
+                    </small>
+
+                    <div class="fw-semibold mt-1">
+                        {% if client.last_seen %}
+                            {{ client.last_seen.strftime('%d.%m.%Y') }}<br>
+                            <small class="text-muted">{{ client.last_seen.strftime('%H:%M') }}</small>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="border rounded p-3 h-100 info-card">
+                    <small class="text-muted">
+                        Sistem Bilgisi Güncelleme
+                    </small>
+
+                    <div class="fw-semibold mt-1">
+                        {% if client.system_info_updated_at %}
+                            {{ client.system_info_updated_at.strftime('%d.%m.%Y') }}<br>
+                            <small class="text-muted">{{ client.system_info_updated_at.strftime('%H:%M') }}</small>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- AÇILIR KAPANIR DETAYLAR -->
+<div class="accordion shadow-sm mb-4" id="clientDetailsAccordion">
+
+    <!-- DONANIM VE PERFORMANS -->
+    <div class="accordion-item">
+
+        <h2 class="accordion-header">
+            <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#hardwareSection"
+                aria-expanded="false"
+                aria-controls="hardwareSection"
+            >
+                Donanım ve Performans
+            </button>
+        </h2>
+
+        <div
+            id="hardwareSection"
+            class="accordion-collapse collapse"
+            data-bs-parent="#clientDetailsAccordion"
+        >
+            <div class="accordion-body">
+
+                <div class="row g-4">
+
+                    <!-- CPU -->
+                    <div class="col-lg-4">
+                        <div class="border rounded p-3 h-100 info-card">
+
+                            <h5 class="mb-3">
+                                CPU
+                            </h5>
+
+                            <p>
+                                <strong>İşlemci:</strong><br>
+                                {{ client.cpu_name or "Bilgi alınamadı" }}
+                            </p>
+
+                            <p>
+                                <strong>Fiziksel Çekirdek:</strong>
+                                {{ client.cpu_core_count if client.cpu_core_count is not none else "—" }}
+                            </p>
+
+                            <p>
+                                <strong>Mantıksal İşlemci:</strong>
+                                {{ client.logical_processor_count if client.logical_processor_count is not none else "—" }}
+                            </p>
+
+                            <div class="mb-1">
+                                <strong>CPU Kullanımı</strong>
+                            </div>
+
+                            <div
+                                class="progress"
+                                role="progressbar"
+                                aria-valuenow="{{ client.cpu_usage | default(0, true) }}"
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                                class="progress client-progress"
+                            >
+                                <div
+                                    class="progress-bar bg-primary text-center fw-bold"
+                                    data-width="{{ client.cpu_usage | default(0, true) }}"
+                                >
+                                    {{ client.cpu_usage | default(0, true) | round(1) }}%
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+
+                    <!-- RAM -->
+                    <div class="col-lg-4">
+                        <div class="border rounded p-3 h-100 info-card">
+
+                            <h5 class="mb-3">
+                                RAM
+                            </h5>
+
+                            <div class="mb-2">
+                                <strong>RAM Kullanımı</strong>
+                            </div>
+
+                            <div
+                                class="progress"
+                                role="progressbar"
+                                aria-valuenow="{{ client.ram_usage_percent | default(0, true) }}"
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                                class="progress client-progress"
+                            >
+                                <div
+                                    class="progress-bar bg-warning text-dark text-center fw-bold"
+                                    data-width="{{ client.ram_usage_percent | default(0, true) }}"
+                                >
+                                    {{ client.ram_usage_percent | default(0, true) | round(1) }}%
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+
+                    <!-- DISK -->
+                    <div class="col-lg-4">
+                        <div class="border rounded p-3 h-100 info-card">
+
+                            <h5 class="mb-3">
+                                Disk
+                            </h5>
+
+                            <div class="mb-2">
+                                <strong>Disk Kullanımı</strong>
+                            </div>
+
+                            <div
+                                class="progress"
+                                role="progressbar"
+                                aria-valuenow="{{ client.disk_usage_percent | default(0, true) }}"
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                                class="progress client-progress"
+                            >
+                                <div
+                                    class="progress-bar bg-success text-center fw-bold"
+                                    data-width="{{ client.disk_usage_percent | default(0, true) }}"
+                                >
+                                    {{ client.disk_usage_percent | default(0, true) | round(1) }}%
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- AĞ BİLGİLERİ -->
+    <div class="accordion-item">
+
+        <h2 class="accordion-header">
+            <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#networkSection"
+            >
+                Ağ Bilgileri
+            </button>
+        </h2>
+
+        <div
+            id="networkSection"
+            class="accordion-collapse collapse"
+            data-bs-parent="#clientDetailsAccordion"
+        >
+            <div class="accordion-body">
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <strong>IPv4 Adresi:</strong>
+                        <div>{{ client.ip_address or "—" }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>IPv6 Adresi:</strong>
+
+                        <div>
+                            {% if client.ipv6_address and client.ipv6_address != "{}" %}
+                                {{ client.ipv6_address }}
+                            {% else %}
+                                Bulunamadı
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>MAC Adresi:</strong>
+                        <div>{{ client.mac_address or "—" }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Domain / Workgroup:</strong>
+                        <div>{{ client.domain_name or "—" }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Varsayılan Ağ Geçidi:</strong>
+                        <div>{{ client.default_gateway or "—" }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>DNS Sunucuları:</strong>
+                        <div>{{ client.dns_servers or "—" }}</div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <strong>TCP Bağlantısı:</strong>
+                        <div>
+                            {{ client.tcp_connection_count if client.tcp_connection_count is not none else "—" }}
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <strong>UDP Endpoint:</strong>
+                        <div>
+                            {{ client.udp_endpoint_count if client.udp_endpoint_count is not none else "—" }}
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <strong>Dinlenen Port:</strong>
+                        <div>
+                            {{ client.listening_port_count if client.listening_port_count is not none else "—" }}
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- SİSTEM BİLGİLERİ -->
+    <div class="accordion-item">
+
+        <h2 class="accordion-header">
+            <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#systemSection"
+            >
+                Sistem Bilgileri
+            </button>
+        </h2>
+
+        <div
+            id="systemSection"
+            class="accordion-collapse collapse"
+            data-bs-parent="#clientDetailsAccordion"
+        >
+            <div class="accordion-body">
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <strong>Windows Sürümü:</strong>
+                        <div>{{ client.windows_version or "—" }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Build Numarası:</strong>
+                        <div>{{ client.build_number or "—" }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Mimari:</strong>
+                        <div>{{ client.architecture or "—" }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Oturum Açan Kullanıcı:</strong>
+                        <div>{{ client.logged_in_user or "—" }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Çalışma Süresi:</strong>
+                        <div>{{ client.uptime or "—" }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Sanallaştırma:</strong>
+                        <div>{{ client.virtualization or "—" }}</div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- AGENT BİLGİLERİ -->
+    <div class="accordion-item">
+
+        <h2 class="accordion-header">
+            <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#agentSection"
+            >
+                Agent Bilgileri
+            </button>
+        </h2>
+
+        <div
+            id="agentSection"
+            class="accordion-collapse collapse"
+            data-bs-parent="#clientDetailsAccordion"
+        >
+            <div class="accordion-body">
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <strong>Client ID:</strong>
+                        <div>{{ client.id }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Agent UUID:</strong>
+                        <div class="text-break" class="client-code-block">
+                            {{ client.uuid or "—" }}
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Agent Sürümü:</strong>
+                        <div>{{ client.agent_version or "—" }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Python Sürümü:</strong>
+                        <div>{{ client.python_version or "—" }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>İlk Görülme:</strong>
+                        <div>
+                            {% if client.registered_at %}
+                                {{ client.registered_at.strftime('%d.%m.%Y %H:%M') }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Son Görülme:</strong>
+                        <div>
+                            {% if client.last_seen %}
+                                {{ client.last_seen.strftime('%d.%m.%Y %H:%M') }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- KURULU UYGULAMALAR -->
+     <div class="accordion-item">
+
+         <h2 class="accordion-header">
+
+             <button
+                 class="accordion-button
+                 {% if not show_installed_apps %}
+                     collapsed
+                 {% endif %}"
+                 type="button"
+                 data-bs-toggle="collapse"
+                 data-bs-target="#installedAppsSection"
+                 aria-expanded="{% if show_installed_apps %}true{% else %}false{% endif %}"
+                 aria-controls="installedAppsSection"
+             >
+                 Kurulu Uygulamalar
+
+                 <span class="badge bg-secondary ms-2">
+                     {{ apps_pagination.total_records }}
+                 </span>
+             </button>
+
+         </h2>
+
+         <!-- YAZILIM GÜNCELLEMELERİ -->
+<div class="accordion-item">
+
+    <h2 class="accordion-header">
+
+        <button
+            class="accordion-button
+            {% if not show_software_updates %}
+                collapsed
+            {% endif %}"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#softwareUpdatesSection"
+            aria-expanded="{% if show_software_updates %}true{% else %}false{% endif %}"
+            aria-controls="softwareUpdatesSection"
+        >
+            Yazılım Güncellemeleri
+
+            <span class="badge bg-warning text-dark ms-2">
+                {{ updates_pagination.total_records }}
+            </span>
+        </button>
+
+    </h2>
+
+    <div
+        id="softwareUpdatesSection"
+        class="accordion-collapse collapse
+        {% if show_software_updates %}
+            show
+        {% endif %}"
+        data-bs-parent="#clientDetailsAccordion"
+    >
+
+        <div class="accordion-body">
+
+            <div class="mb-4">
+                <h5 class="mb-1">
+                    Sürüm Karşılaştırması
+                </h5>
+
+                <p class="text-muted mb-0">
+                    WinGet tarafından güncellemesi bulunan
+                    yazılımlar listelenir.
+                </p>
+            </div>
+
+
+            <form
+                method="GET"
+                action="{{ url_for(
+                    'client.client_detail',
+                    client_id=client.id
+                ) }}#softwareUpdatesSection"
+                class="mb-4"
+            >
+
+                <div class="row g-3 align-items-end">
+
+                    <div class="col-lg-7">
+
+                        <label class="form-label">
+                            Yazılım Ara
+                        </label>
+
+                        <input
+                            type="text"
+                            name="updates_search"
+                            class="form-control"
+                            value="{{ updates_filters.search }}"
+                            placeholder="Uygulama adı, paket veya sürüm"
+                        >
+
+                    </div>
+
+                    <div class="col-lg-2">
+
+                        <label class="form-label">
+                            Kayıt
+                        </label>
+
+                        <select
+                            name="updates_per_page"
+                            class="form-select"
+                        >
+                            {% for amount in [10, 25, 50] %}
+
+                                <option
+                                    value="{{ amount }}"
+                                    {% if updates_filters.per_page == amount %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ amount }}
+                                </option>
+
+                            {% endfor %}
+                        </select>
+
+                    </div>
+
+                    <div class="col-lg-3">
+
+                        <div class="d-flex gap-2">
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary"
+                            >
+                                Ara
+                            </button>
+
+                            <a
+                                href="{{ url_for(
+                                    'client.client_detail',
+                                    client_id=client.id
+                                ) }}#softwareUpdatesSection"
+                                class="btn btn-outline-secondary"
+                            >
+                                Temizle
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+
+                        <tr>
+                            <th>Uygulama</th>
+                            <th>Paket ID</th>
+                            <th>Kurulu Sürüm</th>
+                            <th>Güncel Sürüm</th>
+                            <th>Durum</th>
+                            <th>İşlem</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for update in software_updates %}
+
+                            <tr>
+
+                                <td class="fw-semibold">
+                                    {{ update.package_name }}
+                                </td>
+
+                                <td>
+                                    <code>
+                                        {{ update.package_id }}
+                                    </code>
+                                </td>
+
+                                <td>
+                                    {{ update.installed_version or "—" }}
+                                </td>
+
+                                <td class="fw-semibold">
+                                    {{ update.available_version or "—" }}
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-warning text-dark">
+                                        Güncelleme Var
+                                    </span>
+                                </td>
+                                <td>
+
+    {% if session.get("role_name") == "admin" %}
+
+        <form
+            method="POST"
+            action="{{ url_for(
+                'client.upgrade_software',
+                client_id=client.id,
+                update_id=update.id
+            ) }}"
+            class="software-upgrade-form"
+            data-package-name="{{ update.package_name }}"
+        >
+        <input
+    type="hidden"
+    name="csrf_token"
+    value="{{ csrf_token() }}"
+>
+
+            <button
+                type="submit"
+                class="btn btn-sm btn-primary"
+                {% if client.status != "online" %}
+                    disabled
+                {% endif %}
+            >
+                Güncelle
+            </button>
+
+        </form>
+
+    {% else %}
+
+        <span class="text-muted">
+            —
+        </span>
+
+    {% endif %}
+
+</td>
+
+                            </tr>
+
+                        {% else %}
+
+                            <tr>
+
+                                <td
+                                    colspan="6"
+                                    class="text-center py-4"
+                                >
+                                    <span class="text-success fw-semibold">
+                                        Güncelleme bulunamadı.
+                                    </span>
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            {% if updates_pagination.total_pages > 1 %}
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
+
+                    <div class="text-muted small">
+                        Toplam
+                        {{ updates_pagination.total_records }}
+                        güncelleme — Sayfa
+                        {{ updates_pagination.page }}
+                        /
+                        {{ updates_pagination.total_pages }}
+                    </div>
+
+                    <nav aria-label="Yazılım güncelleme sayfaları">
+
+                        <ul class="pagination mb-0">
+
+                            <li class="page-item
+                                {% if not updates_pagination.has_previous %}
+                                    disabled
+                                {% endif %}"
+                            >
+
+                                <a
+                                    class="page-link"
+                                    href="{{ url_for(
+                                        'client.client_detail',
+                                        client_id=client.id,
+                                        updates_page=updates_pagination.page - 1,
+                                        updates_per_page=updates_filters.per_page,
+                                        updates_search=updates_filters.search
+                                    ) }}#softwareUpdatesSection"
+                                >
+                                    Önceki
+                                </a>
+
+                            </li>
+
+
+                            {% for page_number in range(
+                                updates_start_page,
+                                updates_end_page + 1
+                            ) %}
+
+                                <li class="page-item
+                                    {% if page_number == updates_pagination.page %}
+                                        active
+                                    {% endif %}"
+                                >
+
+                                    <a
+                                        class="page-link"
+                                        href="{{ url_for(
+                                            'client.client_detail',
+                                            client_id=client.id,
+                                            updates_page=page_number,
+                                            updates_per_page=updates_filters.per_page,
+                                            updates_search=updates_filters.search
+                                        ) }}#softwareUpdatesSection"
+                                    >
+                                        {{ page_number }}
+                                    </a>
+
+                                </li>
+
+                            {% endfor %}
+
+
+                            <li class="page-item
+                                {% if not updates_pagination.has_next %}
+                                    disabled
+                                {% endif %}"
+                            >
+
+                                <a
+                                    class="page-link"
+                                    href="{{ url_for(
+                                        'client.client_detail',
+                                        client_id=client.id,
+                                        updates_page=updates_pagination.page + 1,
+                                        updates_per_page=updates_filters.per_page,
+                                        updates_search=updates_filters.search
+                                    ) }}#softwareUpdatesSection"
+                                >
+                                    Sonraki
+                                </a>
+
+                            </li>
+
+                        </ul>
+
+                    </nav>
+
+                </div>
+
             {% endif %}
-        </p>
-        <p><strong>First Seen:</strong> {{ client.first_seen }}</p>
-        <p><strong>Last Seen:</strong> {{ client.last_seen }}</p>
+
+        </div>
+
     </div>
+
 </div>
 
-<div class="card shadow-sm">
+
+         <div
+             id="installedAppsSection"
+             class="accordion-collapse collapse
+             {% if show_installed_apps %}
+                 show
+             {% endif %}"
+             data-bs-parent="#clientDetailsAccordion"
+         >
+
+             <div class="accordion-body">
+
+                 <form
+                     method="GET"
+                     action="{{ url_for(
+                         'client.client_detail',
+                         client_id=client.id
+                     ) }}"
+                     class="mb-4"
+                 >
+
+                     <div class="row g-3 align-items-end">
+
+                         <div class="col-lg-7">
+
+                             <label class="form-label">
+                                 Uygulama Ara
+                             </label>
+
+                             <input
+                                 type="text"
+                                 name="apps_search"
+                                 class="form-control"
+                                 value="{{ apps_filters.search }}"
+                                 placeholder="Uygulama adı, sürüm veya yayıncı"
+                             >
+
+                         </div>
+
+                         <div class="col-lg-2">
+
+                             <label class="form-label">
+                                 Kayıt
+                             </label>
+
+                             <select
+                                 name="apps_per_page"
+                                 class="form-select"
+                             >
+                                 {% for amount in [10, 25, 50] %}
+                                     <option
+                                         value="{{ amount }}"
+                                         {% if apps_filters.per_page == amount %}
+                                             selected
+                                         {% endif %}
+                                     >
+                                         {{ amount }}
+                                     </option>
+                                 {% endfor %}
+                             </select>
+
+                         </div>
+
+                         <div class="col-lg-3">
+
+                             <div class="d-flex gap-2">
+
+                                 <button
+                                     type="submit"
+                                     class="btn btn-primary"
+                                 >
+                                     Ara
+                                 </button>
+
+                                 <a
+                                     href="{{ url_for(
+                                         'client.client_detail',
+                                         client_id=client.id,
+                                     ) }}"
+                                     class="btn btn-outline-secondary"
+                                 >
+                                     Temizle
+                                 </a>
+
+                             </div>
+
+                         </div>
+
+                     </div>
+
+                 </form>
+
+
+                 <div class="table-responsive">
+
+                     <table class="table table-hover align-middle mb-0">
+
+                         <thead class="table-light">
+
+                             <tr>
+                                 <th>Uygulama</th>
+                                 <th>Sürüm</th>
+                                 <th>Yayıncı</th>
+                                 <th>Kurulum Tarihi</th>
+                                 <th>Bilgi Alınma</th>
+                             </tr>
+
+                         </thead>
+
+                         <tbody>
+
+                             {% for app in installed_apps %}
+
+                                 <tr>
+
+                                     <td class="fw-semibold">
+                                         {{ app.app_name }}
+                                     </td>
+
+                                     <td>
+                                         {{ app.app_version or "—" }}
+                                     </td>
+
+                                     <td>
+                                         {{ app.publisher or "—" }}
+                                     </td>
+
+                                     <td>
+                                         {{ app.install_date or "—" }}
+                                     </td>
+
+                                     <td class="text-nowrap">
+
+                                         {% if app.collected_at %}
+                                             {{ app.collected_at.strftime(
+                                                 '%d.%m.%Y %H:%M'
+                                             ) }}
+                                         {% else %}
+                                             —
+                                         {% endif %}
+
+                                     </td>
+
+                                 </tr>
+
+                             {% else %}
+
+                                 <tr>
+
+                                     <td
+                                         colspan="5"
+                                         class="text-center text-muted py-4"
+                                     >
+                                         Kurulu uygulama kaydı bulunamadı.
+                                     </td>
+
+                                 </tr>
+
+                             {% endfor %}
+
+                         </tbody>
+
+                     </table>
+
+                 </div>
+
+
+                 {% if apps_pagination.total_pages > 1 %}
+
+                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
+
+                         <div class="text-muted small">
+                             Toplam
+                             {{ apps_pagination.total_records }}
+                             uygulama — Sayfa
+                             {{ apps_pagination.page }}
+                             /
+                             {{ apps_pagination.total_pages }}
+                         </div>
+
+                         <nav aria-label="Kurulu uygulama sayfaları">
+
+                             <ul class="pagination mb-0">
+
+                                 <li class="page-item
+                                     {% if not apps_pagination.has_previous %}
+                                         disabled
+                                     {% endif %}"
+                                 >
+
+                                     <a
+                                         class="page-link"
+                                         href="{{ url_for(
+                                             'client.client_detail',
+                                             client_id=client.id,
+                                             apps_page=apps_pagination.page - 1,
+                                             apps_per_page=apps_filters.per_page,
+                                             apps_search=apps_filters.search
+                                         ) }}#installedAppsSection"
+                                     >
+                                         Önceki
+                                     </a>
+
+                                 </li>
+
+                                 {% for page_number in range(
+                                     apps_start_page,
+                                     apps_end_page + 1
+                                 ) %}
+
+                                     <li class="page-item
+                                         {% if page_number == apps_pagination.page %}
+                                             active
+                                         {% endif %}"
+                                     >
+
+                                         <a
+                                             class="page-link"
+                                             href="{{ url_for(
+                                                 'client.client_detail',
+                                                 client_id=client.id,
+                                                 apps_page=page_number,
+                                                 apps_per_page=apps_filters.per_page,
+                                                 apps_search=apps_filters.search
+                                             ) }}#installedAppsSection"
+                                         >
+                                             {{ page_number }}
+                                         </a>
+
+                                     </li>
+
+                                 {% endfor %}
+
+                                 <li class="page-item
+                                     {% if not apps_pagination.has_next %}
+                                         disabled
+                                     {% endif %}"
+                                 >
+
+                                     <a
+                                         class="page-link"
+                                         href="{{ url_for(
+                                             'client.client_detail',
+                                             client_id=client.id,
+                                             apps_page=apps_pagination.page + 1,
+                                             apps_per_page=apps_filters.per_page,
+                                             apps_search=apps_filters.search
+                                         ) }}#installedAppsSection"
+                                     >
+                                         Sonraki
+                                     </a>
+
+                                 </li>
+
+                             </ul>
+
+                         </nav>
+
+                     </div>
+
+                 {% endif %}
+
+             </div>
+
+         </div>
+
+     </div>
+
+<!-- CVE RAPORU -->
+<div
+    class="accordion-item"
+    id="cveSection"
+>
+
+    <h2 class="accordion-header">
+
+        <button
+            class="accordion-button
+            {% if not show_cve_findings %}
+                collapsed
+            {% endif %}"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#cveFindingsSection"
+            aria-expanded="{% if show_cve_findings %}true{% else %}false{% endif %}"
+            aria-controls="cveFindingsSection"
+        >
+            CVE Güvenlik Raporu
+
+            <span class="badge bg-danger ms-2">
+                {{ cve_count }}
+            </span>
+        </button>
+
+    </h2>
+
+    <div
+        id="cveFindingsSection"
+        class="accordion-collapse collapse
+        {% if show_cve_findings %}
+            show
+        {% endif %}"
+        data-bs-parent="#clientDetailsAccordion"
+    >
+
+        <div class="accordion-body">
+
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+
+                <div>
+                    <h5 class="mb-1">
+                        Bilinen Güvenlik Açıkları
+                    </h5>
+
+                    <p class="text-muted mb-0">
+                        Kurulu yazılım sürümleri NVD verileri ile
+                        karşılaştırılarak bulunan CVE kayıtları gösterilir.
+                    </p>
+                </div>
+
+                <form
+                    method="POST"
+                    action="{{ url_for(
+                        'client.scan_cves',
+                        client_id=client.id
+                    ) }}"
+                >
+                <input
+    type="hidden"
+    name="csrf_token"
+    value="{{ csrf_token() }}"
+>
+                    <button
+                        type="submit"
+                        class="btn btn-outline-danger"
+                    >
+                        CVE Taraması Yap
+                    </button>
+                </form>
+
+            </div>
+
+
+            {% if cve_findings %}
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle mb-0">
+
+                        <thead class="table-light">
+
+                            <tr>
+                                <th>CVE</th>
+                                <th>Uygulama</th>
+                                <th>Sürüm</th>
+                                <th>CVSS</th>
+                                <th>Seviye</th>
+                                <th>Tarama Tarihi</th>
+                                <th>İşlem</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            {% for finding in cve_findings %}
+
+                                <tr>
+
+                                    <td>
+                                        <strong>
+                                            {{ finding.cve_id }}
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        {{ finding.app_name }}
+                                    </td>
+
+                                    <td>
+                                        {{ finding.app_version or "—" }}
+                                    </td>
+
+                                    <td>
+                                        {% if finding.cvss_score is not none %}
+                                            <strong>
+                                                {{ finding.cvss_score }}
+                                            </strong>
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+
+                                        {% if finding.severity == "CRITICAL" %}
+
+                                            <span class="badge bg-dark">
+                                                Kritik
+                                            </span>
+
+                                        {% elif finding.severity == "HIGH" %}
+
+                                            <span class="badge bg-danger">
+                                                Yüksek
+                                            </span>
+
+                                        {% elif finding.severity == "MEDIUM" %}
+
+                                            <span class="badge bg-warning text-dark">
+                                                Orta
+                                            </span>
+
+                                        {% elif finding.severity == "LOW" %}
+
+                                            <span class="badge bg-info text-dark">
+                                                Düşük
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge bg-secondary">
+                                                Bilinmiyor
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                    <td class="text-nowrap">
+
+                                        {% if finding.scanned_at %}
+
+                                            {{ finding.scanned_at.strftime(
+                                                '%d.%m.%Y %H:%M'
+                                            ) }}
+
+                                        {% else %}
+                                            —
+                                        {% endif %}
+
+                                    </td>
+
+                                    <td>
+
+                                        <a
+                                            href="{{ finding.reference_url }}"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="btn btn-sm btn-outline-primary"
+                                        >
+                                            Detay
+                                        </a>
+
+                                    </td>
+
+                                </tr>
+
+                                {% if finding.description %}
+
+                                    <tr>
+                                        <td
+                                            colspan="7"
+                                            class="bg-light"
+                                        >
+                                            <small class="text-muted">
+                                                {{ finding.description }}
+                                            </small>
+                                        </td>
+                                    </tr>
+
+                                {% endif %}
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <div class="alert alert-success mb-0">
+                    Kayıtlı CVE bulgusu bulunmuyor.
+                </div>
+
+            {% endif %}
+
+
+            <div class="mt-4">
+                <small class="text-muted">
+                    This product uses data from the NVD API but is not
+                    endorsed or certified by the NVD.
+                </small>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ÇALIŞAN UYGULAMALAR -->
+<div class="accordion-item">
+
+    <h2 class="accordion-header">
+
+        <button
+            class="accordion-button
+            {% if not show_running_apps %}
+                collapsed
+            {% endif %}"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#runningAppsSection"
+            aria-expanded="{% if show_running_apps %}true{% else %}false{% endif %}"
+            aria-controls="runningAppsSection"
+        >
+            Çalışan Uygulamalar
+
+            <span class="badge bg-success ms-2">
+                {{ running_pagination.total_records }}
+            </span>
+        </button>
+
+    </h2>
+
+    <div
+        id="runningAppsSection"
+        class="accordion-collapse collapse
+        {% if show_running_apps %}
+            show
+        {% endif %}"
+        data-bs-parent="#clientDetailsAccordion"
+    >
+
+        <div class="accordion-body">
+
+            <form
+                method="GET"
+                action="{{ url_for(
+                    'client.client_detail',
+                    client_id=client.id
+                ) }}"
+                class="mb-4"
+            >
+
+
+                <div class="row g-3 align-items-end">
+
+                    <div class="col-lg-7">
+
+                        <label class="form-label">
+                            Çalışan Uygulama Ara
+                        </label>
+
+                        <input
+                            type="text"
+                            name="running_search"
+                            class="form-control"
+                            value="{{ running_filters.search }}"
+                            placeholder="Uygulama, işlem adı, PID veya kullanıcı"
+                        >
+
+                    </div>
+
+                    <div class="col-lg-2">
+
+                        <label class="form-label">
+                            Kayıt
+                        </label>
+
+                        <select
+                            name="running_per_page"
+                            class="form-select"
+                        >
+                            {% for amount in [10, 25, 50] %}
+                                <option
+                                    value="{{ amount }}"
+                                    {% if running_filters.per_page == amount %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ amount }}
+                                </option>
+                            {% endfor %}
+                        </select>
+
+                    </div>
+
+                    <div class="col-lg-3">
+
+                        <div class="d-flex gap-2">
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary"
+                            >
+                                Ara
+                            </button>
+
+                            <a
+                                href="{{ url_for(
+                                    'client.client_detail',
+                                    client_id=client.id
+                                ) }}"
+                                class="btn btn-outline-secondary"
+                            >
+                                Temizle
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+
+                        <tr>
+                            <th>Uygulama</th>
+                            <th>İşlem</th>
+                            <th>PID</th>
+                            <th>Kullanıcı</th>
+                            <th>RAM</th>
+                            <th>Durum</th>
+                            <th>Bilgi Alınma</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for app in running_apps %}
+
+                            <tr>
+
+                                <td class="fw-semibold">
+                                    {{ app.app_name }}
+                                </td>
+
+                                <td>
+                                    <code>
+                                        {{ app.process_name or "—" }}
+                                    </code>
+                                </td>
+
+                                <td>
+                                    {{ app.process_id }}
+                                </td>
+
+                                <td>
+                                    {{ app.username or "—" }}
+                                </td>
+
+                                <td class="text-nowrap">
+
+                                    {% if app.memory_mb is not none %}
+                                        {{ app.memory_mb | round(2) }} MB
+                                    {% else %}
+                                        —
+                                    {% endif %}
+
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-success">
+                                        Çalışıyor
+                                    </span>
+                                </td>
+
+                                <td class="text-nowrap">
+
+                                    {% if app.collected_at %}
+                                        {{ app.collected_at.strftime(
+                                            '%d.%m.%Y %H:%M'
+                                        ) }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+
+                                </td>
+
+                            </tr>
+
+                        {% else %}
+
+                            <tr>
+
+                                <td
+                                    colspan="7"
+                                    class="text-center text-muted py-4"
+                                >
+                                    Çalışan uygulama kaydı bulunamadı.
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            {% if running_pagination.total_pages > 1 %}
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
+
+                    <div class="text-muted small">
+                        Toplam
+                        {{ running_pagination.total_records }}
+                        uygulama — Sayfa
+                        {{ running_pagination.page }}
+                        /
+                        {{ running_pagination.total_pages }}
+                    </div>
+
+                    <nav aria-label="Çalışan uygulama sayfaları">
+
+                        <ul class="pagination mb-0">
+
+                            <li class="page-item
+                                {% if not running_pagination.has_previous %}
+                                    disabled
+                                {% endif %}"
+                            >
+
+                                <a
+                                    class="page-link"
+                                    href="{{ url_for(
+                                        'client.client_detail',
+                                        client_id=client.id,
+                                        running_page=running_pagination.page - 1,
+                                        running_per_page=running_filters.per_page,
+                                        running_search=running_filters.search
+                                    ) }}#runningAppsSection"
+                                >
+                                    Önceki
+                                </a>
+
+                            </li>
+
+                            {% for page_number in range(
+                                running_start_page,
+                                running_end_page + 1
+                            ) %}
+
+                                <li class="page-item
+                                    {% if page_number == running_pagination.page %}
+                                        active
+                                    {% endif %}"
+                                >
+
+                                    <a
+                                        class="page-link"
+                                        href="{{ url_for(
+                                            'client.client_detail',
+                                            client_id=client.id,
+                                            running_page=page_number,
+                                            running_per_page=running_filters.per_page,
+                                            running_search=running_filters.search
+                                        ) }}#runningAppsSection"
+                                    >
+                                        {{ page_number }}
+                                    </a>
+
+                                </li>
+
+                            {% endfor %}
+
+                            <li class="page-item
+                                {% if not running_pagination.has_next %}
+                                    disabled
+                                {% endif %}"
+                            >
+
+                                <a
+                                    class="page-link"
+                                    href="{{ url_for(
+                                        'client.client_detail',
+                                        client_id=client.id,
+                                        running_page=running_pagination.page + 1,
+                                        running_per_page=running_filters.per_page,
+                                        running_search=running_filters.search
+                                    ) }}#runningAppsSection"
+                                >
+                                    Sonraki
+                                </a>
+
+                            </li>
+
+                        </ul>
+
+                    </nav>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+<!-- PORT ENVANTERİ -->
+
+<div
+    class="accordion-item"
+    id="portInventorySection"
+>
+
+    <h2 class="accordion-header">
+
+        <button
+            class="accordion-button
+            {% if not show_port_inventory %}
+                collapsed
+            {% endif %}"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#portInventoryContent"
+            aria-expanded="{% if show_port_inventory %}true{% else %}false{% endif %}"
+            aria-controls="portInventoryContent"
+        >
+            Port Envanteri
+
+            <span class="badge bg-primary ms-2">
+                {{ ports_summary.total }}
+            </span>
+        </button>
+
+    </h2>
+
+    <div
+        id="portInventoryContent"
+        class="accordion-collapse collapse
+        {% if show_port_inventory %}
+            show
+        {% endif %}"
+        data-bs-parent="#clientDetailsAccordion"
+    >
+
+        <div class="accordion-body">
+            <div class="port-inventory-heading">
+
+    <div>
+
+        <h5 class="mb-1">
+            Ağ Port Kontrolü
+        </h5>
+
+        <p class="text-muted small mb-0">
+            Agent tarafından bildirilen TCP portlarının
+            ağ üzerinden erişilebilirliğini Nmap ile
+            kontrol edin.
+        </p>
+
+    </div>
+
+    {% if nmap_scan_active %}
+
+        <button
+            type="button"
+            class="btn btn-outline-primary"
+            disabled
+        >
+            Tarama Devam Ediyor
+        </button>
+
+    {% elif client.status == "online" %}
+
+        <form
+            method="POST"
+            action="{{ url_for(
+                'client.start_nmap_scan',
+                client_id=client.id
+            ) }}"
+            class="m-0"
+        >
+        <input
+    type="hidden"
+    name="csrf_token"
+    value="{{ csrf_token() }}"
+>
+
+            <button
+                type="submit"
+                class="btn btn-outline-primary"
+            >
+                Nmap Taraması Yap
+            </button>
+
+        </form>
+
+    {% else %}
+
+        <button
+            type="button"
+            class="btn btn-outline-secondary"
+            disabled
+        >
+            İstemci Çevrimdışı
+        </button>
+
+    {% endif %}
+
+</div>
+
+
+{% if nmap_scan_active %}
+
+    <div
+        id="nmapScanAutoRefresh"
+        data-refresh-interval="3000"
+        hidden
+    >
+    </div>
+
+{% endif %}
+
+
+{% if latest_nmap_scan %}
+
+    <div class="nmap-status-panel">
+
+        <div class="nmap-status-heading">
+
+            <div>
+
+                <h6 class="mb-1">
+                    Son Nmap Taraması
+                </h6>
+
+                <p class="text-muted small mb-0">
+                    Hedef:
+                    <code>
+                        {{ latest_nmap_scan.target_ip }}
+                    </code>
+                </p>
+
+            </div>
+
+            {% if latest_nmap_scan.status == "completed" %}
+
+                <span class="status-badge status-completed">
+                    Tamamlandı
+                </span>
+
+            {% elif latest_nmap_scan.status == "failed" %}
+
+                <span class="status-badge status-failed">
+                    Başarısız
+                </span>
+
+            {% elif latest_nmap_scan.status == "running" %}
+
+                <span class="status-badge status-running">
+                    Taranıyor
+                </span>
+
+            {% else %}
+
+                <span class="status-badge status-pending">
+                    Bekliyor
+                </span>
+
+            {% endif %}
+
+        </div>
+
+
+        {% if latest_nmap_scan.status in [
+            "pending",
+            "running"
+        ] %}
+
+            <div class="nmap-progress-message">
+
+                <span class="nmap-progress-indicator">
+                </span>
+
+                Nmap taraması arka planda devam ediyor.
+                Sonuçlar otomatik yenilenecek.
+
+            </div>
+
+        {% elif latest_nmap_scan.status == "completed" %}
+
+            <div class="nmap-result-grid">
+
+                <div class="nmap-result-card">
+
+                    <span>
+                        Taranan
+                    </span>
+
+                    <strong>
+                        {{ latest_nmap_scan.scanned_port_count }}
+                    </strong>
+
+                </div>
+
+                <div class="nmap-result-card">
+
+                    <span>
+                        Açık
+                    </span>
+
+                    <strong class="text-success">
+                        {{ latest_nmap_scan.open_port_count }}
+                    </strong>
+
+                </div>
+
+                <div class="nmap-result-card">
+
+                    <span>
+                        Filtrelenmiş
+                    </span>
+
+                    <strong class="text-warning">
+                        {{ latest_nmap_scan.filtered_port_count }}
+                    </strong>
+
+                </div>
+
+                <div class="nmap-result-card">
+
+                    <span>
+                        Kapalı
+                    </span>
+
+                    <strong class="text-danger">
+                        {{ latest_nmap_scan.closed_port_count }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+        {% elif latest_nmap_scan.status == "failed" %}
+
+            <div class="nmap-error-message">
+
+                <strong>
+                    Tarama tamamlanamadı:
+                </strong>
+
+                {{ latest_nmap_scan.error_message
+                    or "Bilinmeyen bir hata oluştu."
+                }}
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+{% endif %}
+
+            <div class="port-summary-grid">
+
+                <div class="port-summary-card">
+
+                    <span>
+                        Toplam Kayıt
+                    </span>
+
+                    <strong>
+                        {{ ports_summary.total }}
+                    </strong>
+
+                </div>
+
+                <div class="port-summary-card">
+
+                    <span>
+                        TCP Portları
+                    </span>
+
+                    <strong class="text-primary">
+                        {{ ports_summary.tcp_total }}
+                    </strong>
+
+                </div>
+
+                <div class="port-summary-card">
+
+                    <span>
+                        UDP Endpointleri
+                    </span>
+
+                    <strong class="text-info">
+                        {{ ports_summary.udp_total }}
+                    </strong>
+
+                </div>
+
+                <div class="port-summary-card">
+
+                    <span>
+                        Son Güncelleme
+                    </span>
+
+                    <strong class="port-summary-date">
+
+                        {% if ports_summary.collected_at %}
+
+                            {{ ports_summary.collected_at.strftime(
+                                '%d.%m.%Y %H:%M'
+                            ) }}
+
+                        {% else %}
+                            —
+                        {% endif %}
+
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <form
+                method="GET"
+                action="{{ url_for(
+                    'client.client_detail',
+                    client_id=client.id
+                ) }}"
+                class="port-filter-form"
+            >
+
+                <input
+                    type="hidden"
+                    name="show_ports"
+                    value="1"
+                >
+
+                <div class="row g-3 align-items-end">
+
+                    <div class="col-lg-5">
+
+                        <label
+                            for="portsSearch"
+                            class="form-label"
+                        >
+                            Port Ara
+                        </label>
+
+                        <input
+                            type="text"
+                            id="portsSearch"
+                            name="ports_search"
+                            class="form-control"
+                            value="{{ ports_filters.search }}"
+                            placeholder="Port, IP adresi, işlem veya durum"
+                        >
+
+                    </div>
+
+                    <div class="col-sm-6 col-lg-2">
+
+                        <label
+                            for="portsProtocol"
+                            class="form-label"
+                        >
+                            Protokol
+                        </label>
+
+                        <select
+                            id="portsProtocol"
+                            name="ports_protocol"
+                            class="form-select"
+                        >
+
+                            <option value="">
+                                Tümü
+                            </option>
+
+                            <option
+                                value="TCP"
+                                {% if ports_filters.protocol == "TCP" %}
+                                    selected
+                                {% endif %}
+                            >
+                                TCP
+                            </option>
+
+                            <option
+                                value="UDP"
+                                {% if ports_filters.protocol == "UDP" %}
+                                    selected
+                                {% endif %}
+                            >
+                                UDP
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-sm-6 col-lg-2">
+
+                        <label
+                            for="portsPerPage"
+                            class="form-label"
+                        >
+                            Kayıt
+                        </label>
+
+                        <select
+                            id="portsPerPage"
+                            name="ports_per_page"
+                            class="form-select"
+                        >
+
+                            {% for amount in [10, 25, 50] %}
+
+                                <option
+                                    value="{{ amount }}"
+                                    {% if ports_filters.per_page == amount %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ amount }}
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-lg-3">
+
+                        <div class="port-filter-actions">
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary"
+                            >
+                                Filtrele
+                            </button>
+
+                            <a
+                                href="{{ url_for(
+                                    'client.client_detail',
+                                    client_id=client.id,
+                                    show_ports=1
+                                ) }}#portInventorySection"
+                                class="btn btn-outline-secondary"
+                            >
+                                Temizle
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+
+            <div class="table-responsive port-table-wrapper">
+
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+
+                        <tr>
+                            <th>Protokol</th>
+                            <th>Yerel Adres</th>
+                            <th>Port</th>
+                            <th>Durum</th>
+                            <th>PID</th>
+                            <th>İşlem</th>
+                            <th>AĞ KONTROLÜ</th>
+                            <th>Bilgi Alınma</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for port in client_ports %}
+
+                            <tr>
+
+                                <td>
+
+                                    {% if port.protocol == "TCP" %}
+
+                                        <span class="port-protocol port-protocol-tcp">
+                                            TCP
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="port-protocol port-protocol-udp">
+                                            UDP
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                                <td>
+                                    <code class="port-address">
+                                        {{ port.local_address }}
+                                    </code>
+                                </td>
+
+                                <td>
+
+                                    <strong class="port-number">
+                                        {{ port.local_port }}
+                                    </strong>
+
+                                </td>
+
+                                <td>
+
+                                    {% if port.state in [
+                                        "LISTEN",
+                                        "LISTENING"
+                                    ] %}
+
+                                        <span class="status-badge status-completed">
+                                            Dinleniyor
+                                        </span>
+
+                                    {% elif port.state in [
+                                        "NONE",
+                                        "BOUND"
+                                    ] %}
+
+                                        <span class="status-badge status-assigned">
+                                            Bağlı
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="status-badge status-pending">
+                                            {{ port.state }}
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                                <td>
+
+                                    {% if port.pid is not none %}
+
+                                        <code>
+                                            {{ port.pid }}
+                                        </code>
+
+                                    {% else %}
+                                        —
+                                    {% endif %}
+
+                                </td>
+
+                                <td>
+
+                                    <span class="port-process-name">
+                                        {{ port.process_name or "Bilinmiyor" }}
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+    {% if port.network_status == "accessible" %}
+
+        <span class="port-network-status is-accessible">
+            Ağdan Erişilebilir
+        </span>
+
+    {% elif port.network_status == "filtered" %}
+
+        <span class="port-network-status is-filtered">
+            Filtrelenmiş
+        </span>
+
+    {% elif port.network_status == "mismatch" %}
+
+        <span class="port-network-status is-mismatch">
+            Sonuç Uyuşmuyor
+        </span>
+
+    {% elif port.network_status == "udp_not_scanned" %}
+
+        <span class="port-network-status is-not-scanned">
+            TCP Kontrolü Dışı
+        </span>
+
+    {% elif port.network_status == "not_in_scan" %}
+
+        <span class="port-network-status is-not-scanned">
+            Son Taramada Yok
+        </span>
+
+    {% elif port.network_status == "unknown" %}
+
+        <span class="port-network-status is-unknown">
+            Belirsiz
+        </span>
+
+    {% else %}
+
+        <span class="port-network-status is-not-scanned">
+            Tarama Yok
+        </span>
+
+    {% endif %}
+
+    {% if port.nmap_service_name %}
+
+        <small class="port-network-service">
+            {{ port.nmap_service_name }}
+        </small>
+
+    {% endif %}
+
+</td>
+
+                                <td class="text-nowrap">
+
+                                    {% if port.collected_at %}
+
+                                        {{ port.collected_at.strftime(
+                                            '%d.%m.%Y %H:%M'
+                                        ) }}
+
+                                    {% else %}
+                                        —
+                                    {% endif %}
+
+                                </td>
+
+                            </tr>
+
+                        {% else %}
+
+                            <tr>
+
+                                <td
+                                    colspan="8"
+                                    class="text-center text-muted py-4"
+                                >
+                                    Port envanteri kaydı bulunamadı.
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            {% if ports_pagination.total_pages > 1 %}
+
+                <div class="port-pagination">
+
+                    <div class="text-muted small">
+
+                        Toplam
+                        {{ ports_pagination.total_records }}
+                        kayıt — Sayfa
+                        {{ ports_pagination.page }}
+                        /
+                        {{ ports_pagination.total_pages }}
+
+                    </div>
+
+                    <nav aria-label="Port envanteri sayfaları">
+
+                        <ul class="pagination mb-0">
+
+                            <li class="page-item
+                                {% if not ports_pagination.has_previous %}
+                                    disabled
+                                {% endif %}"
+                            >
+
+                                <a
+                                    class="page-link"
+                                    href="{{ url_for(
+                                        'client.client_detail',
+                                        client_id=client.id,
+                                        show_ports=1,
+                                        ports_page=ports_pagination.page - 1,
+                                        ports_per_page=ports_filters.per_page,
+                                        ports_search=ports_filters.search,
+                                        ports_protocol=ports_filters.protocol
+                                    ) }}#portInventorySection"
+                                >
+                                    Önceki
+                                </a>
+
+                            </li>
+
+                            {% for page_number in range(
+                                ports_start_page,
+                                ports_end_page + 1
+                            ) %}
+
+                                <li class="page-item
+                                    {% if page_number == ports_pagination.page %}
+                                        active
+                                    {% endif %}"
+                                >
+
+                                    <a
+                                        class="page-link"
+                                        href="{{ url_for(
+                                            'client.client_detail',
+                                            client_id=client.id,
+                                            show_ports=1,
+                                            ports_page=page_number,
+                                            ports_per_page=ports_filters.per_page,
+                                            ports_search=ports_filters.search,
+                                            ports_protocol=ports_filters.protocol
+                                        ) }}#portInventorySection"
+                                    >
+                                        {{ page_number }}
+                                    </a>
+
+                                </li>
+
+                            {% endfor %}
+
+                            <li class="page-item
+                                {% if not ports_pagination.has_next %}
+                                    disabled
+                                {% endif %}"
+                            >
+
+                                <a
+                                    class="page-link"
+                                    href="{{ url_for(
+                                        'client.client_detail',
+                                        client_id=client.id,
+                                        show_ports=1,
+                                        ports_page=ports_pagination.page + 1,
+                                        ports_per_page=ports_filters.per_page,
+                                        ports_search=ports_filters.search,
+                                        ports_protocol=ports_filters.protocol
+                                    ) }}#portInventorySection"
+                                >
+                                    Sonraki
+                                </a>
+
+                            </li>
+
+                        </ul>
+
+                    </nav>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+<!-- PORT DEĞİŞİKLİK GEÇMİŞİ -->
+
+<div
+    class="accordion-item"
+    id="portEventsSection"
+>
+
+    <h2 class="accordion-header">
+
+        <button
+            class="accordion-button
+            {% if not show_port_events %}
+                collapsed
+            {% endif %}"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#portEventsContent"
+            aria-expanded="{% if show_port_events %}true{% else %}false{% endif %}"
+            aria-controls="portEventsContent"
+        >
+            Port Değişiklik Geçmişi
+
+            <span class="badge bg-secondary ms-2">
+                {{ port_events_summary.total }}
+            </span>
+        </button>
+
+    </h2>
+
+    <div
+        id="portEventsContent"
+        class="accordion-collapse collapse
+        {% if show_port_events %}
+            show
+        {% endif %}"
+        data-bs-parent="#clientDetailsAccordion"
+    >
+
+        <div class="accordion-body">
+
+            <div class="port-event-summary-grid">
+
+                <div class="port-event-summary-card">
+
+                    <span>
+                        Toplam Değişiklik
+                    </span>
+
+                    <strong>
+                        {{ port_events_summary.total }}
+                    </strong>
+
+                </div>
+
+                <div class="port-event-summary-card">
+
+                    <span>
+                        Açılan Port
+                    </span>
+
+                    <strong class="text-success">
+                        {{ port_events_summary.opened_total }}
+                    </strong>
+
+                </div>
+
+                <div class="port-event-summary-card">
+
+                    <span>
+                        Kapanan Port
+                    </span>
+
+                    <strong class="text-danger">
+                        {{ port_events_summary.closed_total }}
+                    </strong>
+
+                </div>
+
+                <div class="port-event-summary-card">
+
+                    <span>
+                        Son Değişiklik
+                    </span>
+
+                    <strong class="port-event-summary-date">
+
+                        {% if port_events_summary.last_event_at %}
+
+                            {{ port_events_summary.last_event_at.strftime(
+                                '%d.%m.%Y %H:%M'
+                            ) }}
+
+                        {% else %}
+                            —
+                        {% endif %}
+
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <form
+                method="GET"
+                action="{{ url_for(
+                    'client.client_detail',
+                    client_id=client.id
+                ) }}"
+                class="port-event-filter-form"
+            >
+
+                <input
+                    type="hidden"
+                    name="show_port_events"
+                    value="1"
+                >
+
+                <div class="row g-3 align-items-end">
+
+                    <div class="col-xl-4">
+
+                        <label
+                            for="portEventsSearch"
+                            class="form-label"
+                        >
+                            Değişiklik Ara
+                        </label>
+
+                        <input
+                            type="text"
+                            id="portEventsSearch"
+                            name="events_search"
+                            class="form-control"
+                            value="{{ port_events_filters.search }}"
+                            placeholder="Port, adres veya işlem"
+                        >
+
+                    </div>
+
+                    <div class="col-sm-6 col-xl-2">
+
+                        <label
+                            for="portEventsType"
+                            class="form-label"
+                        >
+                            Değişiklik
+                        </label>
+
+                        <select
+                            id="portEventsType"
+                            name="events_type"
+                            class="form-select"
+                        >
+
+                            <option value="">
+                                Tümü
+                            </option>
+
+                            <option
+                                value="OPENED"
+                                {% if port_events_filters.event_type == "OPENED" %}
+                                    selected
+                                {% endif %}
+                            >
+                                Açıldı
+                            </option>
+
+                            <option
+                                value="CLOSED"
+                                {% if port_events_filters.event_type == "CLOSED" %}
+                                    selected
+                                {% endif %}
+                            >
+                                Kapandı
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-sm-6 col-xl-2">
+
+                        <label
+                            for="portEventsProtocol"
+                            class="form-label"
+                        >
+                            Protokol
+                        </label>
+
+                        <select
+                            id="portEventsProtocol"
+                            name="events_protocol"
+                            class="form-select"
+                        >
+
+                            <option value="">
+                                Tümü
+                            </option>
+
+                            <option
+                                value="TCP"
+                                {% if port_events_filters.protocol == "TCP" %}
+                                    selected
+                                {% endif %}
+                            >
+                                TCP
+                            </option>
+
+                            <option
+                                value="UDP"
+                                {% if port_events_filters.protocol == "UDP" %}
+                                    selected
+                                {% endif %}
+                            >
+                                UDP
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-sm-6 col-xl-1">
+
+                        <label
+                            for="portEventsPerPage"
+                            class="form-label"
+                        >
+                            Kayıt
+                        </label>
+
+                        <select
+                            id="portEventsPerPage"
+                            name="events_per_page"
+                            class="form-select"
+                        >
+
+                            {% for amount in [10, 25, 50] %}
+
+                                <option
+                                    value="{{ amount }}"
+                                    {% if port_events_filters.per_page == amount %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ amount }}
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-sm-6 col-xl-3">
+
+                        <div class="port-event-filter-actions">
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary"
+                            >
+                                Filtrele
+                            </button>
+
+                            <a
+                                href="{{ url_for(
+                                    'client.client_detail',
+                                    client_id=client.id,
+                                    show_port_events=1
+                                ) }}#portEventsSection"
+                                class="btn btn-outline-secondary"
+                            >
+                                Temizle
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+
+            <div class="table-responsive port-event-table-wrapper">
+
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+
+                        <tr>
+                            <th>Değişiklik</th>
+                            <th>Protokol</th>
+                            <th>Yerel Adres</th>
+                            <th>Port</th>
+                            <th>İşlem</th>
+                            <th>PID</th>
+                            <th>Tespit Zamanı</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for event in port_events %}
+
+                            <tr>
+
+                                <td>
+
+                                    {% if event.event_type == "OPENED" %}
+
+                                        <span class="port-event-badge port-event-opened">
+                                            Açıldı
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="port-event-badge port-event-closed">
+                                            Kapandı
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                                <td>
+
+                                    <span class="port-protocol
+                                        {% if event.protocol == 'TCP' %}
+                                            port-protocol-tcp
+                                        {% else %}
+                                            port-protocol-udp
+                                        {% endif %}"
+                                    >
+                                        {{ event.protocol }}
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    <code class="port-address">
+                                        {{ event.local_address }}
+                                    </code>
+
+                                </td>
+
+                                <td>
+
+                                    <strong class="port-number">
+                                        {{ event.local_port }}
+                                    </strong>
+
+                                </td>
+
+                                <td>
+
+                                    <span class="port-process-name">
+                                        {{ event.process_name or "Bilinmiyor" }}
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    {% if event.pid is not none %}
+
+                                        <code>
+                                            {{ event.pid }}
+                                        </code>
+
+                                    {% else %}
+                                        —
+                                    {% endif %}
+
+                                </td>
+
+                                <td class="text-nowrap">
+
+                                    {% if event.detected_at %}
+
+                                        {{ event.detected_at.strftime(
+                                            '%d.%m.%Y %H:%M'
+                                        ) }}
+
+                                    {% else %}
+                                        —
+                                    {% endif %}
+
+                                </td>
+
+                            </tr>
+
+                        {% else %}
+
+                            <tr>
+
+                                <td
+                                    colspan="7"
+                                    class="text-center text-muted py-4"
+                                >
+                                    Port değişiklik kaydı bulunamadı.
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            {% if port_events_pagination.total_pages > 1 %}
+
+                <div class="port-event-pagination">
+
+                    <div class="text-muted small">
+
+                        Toplam
+                        {{ port_events_pagination.total_records }}
+                        değişiklik — Sayfa
+                        {{ port_events_pagination.page }}
+                        /
+                        {{ port_events_pagination.total_pages }}
+
+                    </div>
+
+                    <nav aria-label="Port değişiklik sayfaları">
+
+                        <ul class="pagination mb-0">
+
+                            <li class="page-item
+                                {% if not port_events_pagination.has_previous %}
+                                    disabled
+                                {% endif %}"
+                            >
+
+                                <a
+                                    class="page-link"
+                                    href="{{ url_for(
+                                        'client.client_detail',
+                                        client_id=client.id,
+                                        show_port_events=1,
+                                        events_page=port_events_pagination.page - 1,
+                                        events_per_page=port_events_filters.per_page,
+                                        events_search=port_events_filters.search,
+                                        events_protocol=port_events_filters.protocol,
+                                        events_type=port_events_filters.event_type
+                                    ) }}#portEventsSection"
+                                >
+                                    Önceki
+                                </a>
+
+                            </li>
+
+                            {% for page_number in range(
+                                port_events_start_page,
+                                port_events_end_page + 1
+                            ) %}
+
+                                <li class="page-item
+                                    {% if page_number == port_events_pagination.page %}
+                                        active
+                                    {% endif %}"
+                                >
+
+                                    <a
+                                        class="page-link"
+                                        href="{{ url_for(
+                                            'client.client_detail',
+                                            client_id=client.id,
+                                            show_port_events=1,
+                                            events_page=page_number,
+                                            events_per_page=port_events_filters.per_page,
+                                            events_search=port_events_filters.search,
+                                            events_protocol=port_events_filters.protocol,
+                                            events_type=port_events_filters.event_type
+                                        ) }}#portEventsSection"
+                                    >
+                                        {{ page_number }}
+                                    </a>
+
+                                </li>
+
+                            {% endfor %}
+
+                            <li class="page-item
+                                {% if not port_events_pagination.has_next %}
+                                    disabled
+                                {% endif %}"
+                            >
+
+                                <a
+                                    class="page-link"
+                                    href="{{ url_for(
+                                        'client.client_detail',
+                                        client_id=client.id,
+                                        show_port_events=1,
+                                        events_page=port_events_pagination.page + 1,
+                                        events_per_page=port_events_filters.per_page,
+                                        events_search=port_events_filters.search,
+                                        events_protocol=port_events_filters.protocol,
+                                        events_type=port_events_filters.event_type
+                                    ) }}#portEventsSection"
+                                >
+                                    Sonraki
+                                </a>
+
+                            </li>
+
+                        </ul>
+
+                    </nav>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+</div>
+
+<!-- İSTEMCİ İŞLEMLERİ -->
+
+<div class="card client-actions-card mb-4">
+
+    <div class="card-body">
+
+        <div class="client-actions-heading">
+
+            <div>
+
+                <h5 class="mb-1">
+                    İstemci İşlemleri
+                </h5>
+
+                <p class="text-muted small mb-0">
+                    Script çalıştırma ve geçmiş kayıtlarına
+                    hızlıca ulaşın.
+                </p>
+
+            </div>
+
+            <div class="client-action-buttons">
+
+                {% if client.status == "online" %}
+
+                    <a
+                        href="{{ url_for(
+                            'script_execution.execute_script_central',
+                            client_id=client.id
+                        ) }}"
+                        class="btn btn-primary"
+                    >
+                        Script Çalıştır
+                    </a>
+
+                {% else %}
+
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        disabled
+                        title="İstemci çevrimdışı olduğu için script gönderilemez."
+                    >
+                        İstemci Çevrimdışı
+                    </button>
+
+                {% endif %}
+
+                <a
+                    href="{{ url_for(
+                        'script_execution.execution_history',
+                        client_id=client.id
+                    ) }}"
+                    class="btn btn-outline-secondary"
+                >
+                    Script Geçmişi
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- İSTEMCİ GRUPLARI -->
+
+<div class="card client-groups-card mb-4">
+
     <div class="card-header">
-        Komut Geçmişi
+
+        <div>
+
+            <h5 class="mb-1">
+                İstemci Grupları
+            </h5>
+
+            <p class="text-muted small mb-0">
+                İstemcinin bağlı olduğu yönetim gruplarını
+                belirleyin.
+            </p>
+
+        </div>
+
+        <span class="section-count-label">
+
+            {{ selected_group_ids | length }}
+            grup seçili
+
+        </span>
+
     </div>
 
     <div class="card-body">
-        <table class="table table-hover align-middle">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Komut</th>
-                    <th>Durum</th>
-                    <th>Sonuç</th>
-                    <th>Oluşturulma</th>
-                    <th>Tamamlanma</th>
-                </tr>
-            </thead>
 
-            <tbody>
-                {% for command in commands %}
-                <tr>
-                    <td>{{ command.id }}</td>
-                    <td>{{ command.command_text }}</td>
-                    <td>{{ command.status }}</td>
-                    <td>{{ command.result }}</td>
-                    <td>{{ command.created_at }}</td>
-                    <td>{{ command.completed_at }}</td>
-                </tr>
+        {% if session.get("role_name") == "admin" %}
+
+            <form
+                method="POST"
+                action="{{ url_for(
+                    'client.update_groups',
+                    client_id=client.id
+                ) }}"
+            ><input
+    type="hidden"
+    name="csrf_token"
+    value="{{ csrf_token() }}"
+>
+
+                {% if groups %}
+
+                    <div class="client-group-grid">
+
+                        {% for group in groups %}
+
+                            <div class="client-group-option">
+
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    name="group_ids"
+                                    value="{{ group.id }}"
+                                    id="group{{ group.id }}"
+                                    {% if group.id in selected_group_ids %}
+                                        checked
+                                    {% endif %}
+                                >
+
+                                <label
+                                    for="group{{ group.id }}"
+                                >
+
+                                    <strong>
+                                        {{ group.name }}
+                                    </strong>
+
+                                    <small>
+                                        {{ group.description
+                                            or "Açıklama bulunmuyor."
+                                        }}
+                                    </small>
+
+                                </label>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                    <div class="client-groups-footer">
+
+                        <span class="text-muted small">
+                            Yaptığınız değişiklikler kaydetme
+                            işleminden sonra uygulanır.
+                        </span>
+
+                        <button
+                            class="btn btn-primary"
+                            type="submit"
+                        >
+                            Grupları Kaydet
+                        </button>
+
+                    </div>
+
                 {% else %}
-                <tr>
-                    <td colspan="6" class="text-center text-muted">
-                        Bu client için henüz komut geçmişi bulunmuyor.
-                    </td>
-                </tr>
+
+                    <div class="empty-state py-4">
+
+                        <span class="empty-state-mark">
+                            GRP
+                        </span>
+
+                        <strong>
+                            Grup bulunmuyor
+                        </strong>
+
+                        <span>
+                            Bu istemciye atanabilecek bir grup
+                            oluşturulmamış.
+                        </span>
+
+                    </div>
+
+                {% endif %}
+
+            </form>
+
+        {% else %}
+
+            <div class="client-group-grid">
+
+                {% for group in groups %}
+
+                    {% if group.id in selected_group_ids %}
+
+                        <div class="client-group-display">
+
+                            <strong>
+                                {{ group.name }}
+                            </strong>
+
+                            <small>
+                                {{ group.description
+                                    or "Açıklama bulunmuyor."
+                                }}
+                            </small>
+
+                        </div>
+
+                    {% endif %}
+
                 {% endfor %}
-            </tbody>
-        </table>
+
+            </div>
+
+        {% endif %}
+
     </div>
+
 </div>
 
-<br>
 
-<a href="/clients" class="btn btn-secondary">Client Listesine Dön</a>
+<!-- AI POWERSHELL SCRIPT OLUŞTURUCU -->
+
+<div class="card ai-script-card mb-4">
+
+    <div class="card-header">
+
+        <div class="ai-card-heading">
+
+            <span class="ai-card-mark">
+                AI
+            </span>
+
+            <div>
+
+                <h5 class="mb-1">
+                    AI Destekli PowerShell Script Oluşturucu
+                </h5>
+
+                <p class="text-muted small mb-0">
+                    Yapmak istediğiniz işlemi açıklayarak
+                    PowerShell scripti oluşturun.
+                </p>
+
+            </div>
+
+        </div>
+
+        {% if client.status == "online" %}
+
+            <span class="client-status online">
+
+                <span class="client-status-dot">
+                </span>
+
+                Kullanılabilir
+
+            </span>
+
+        {% else %}
+
+            <span class="client-status offline">
+
+                <span class="client-status-dot">
+                </span>
+
+                İstemci çevrimdışı
+
+            </span>
+
+        {% endif %}
+
+    </div>
+
+    <div class="card-body">
+
+        {% if client.status != "online" %}
+
+            <div class="alert alert-warning">
+                Bu istemci çevrimdışı olduğu için oluşturulan
+                script çalıştırma ekranına gönderilemez.
+            </div>
+
+        {% endif %}
+
+        <form
+            method="POST"
+            action="{{ url_for(
+                'client.generate_ai_command',
+                client_id=client.id
+            ) }}"
+        >
+        <input
+    type="hidden"
+    name="csrf_token"
+    value="{{ csrf_token() }}"
+>
+
+            <div class="mb-3">
+
+                <label
+                    for="aiRequest"
+                    class="form-label"
+                >
+                    Yapmak istediğiniz işlemi açıklayın
+                </label>
+
+                <textarea
+                    id="aiRequest"
+                    name="ai_request"
+                    class="form-control ai-request-input"
+                    rows="4"
+                    placeholder="Örneğin: Çalışan işlemleri ve kullandıkları bellek miktarını listele"
+                >{{ ai_request or "" }}</textarea>
+
+                <div class="form-text">
+                    Oluşturulan script çalıştırılmadan önce
+                    düzenlenebilir ve kontrol edilebilir.
+                </div>
+
+            </div>
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+                {% if client.status != "online" %}
+                    disabled
+                {% endif %}
+            >
+
+                {% if client.status == "online" %}
+
+                    PowerShell Scripti Oluştur
+
+                {% else %}
+
+                    İstemci Çevrimdışı
+
+                {% endif %}
+
+            </button>
+
+        </form>
+
+
+        {% if ai_error %}
+
+            <div class="alert alert-danger mt-3 mb-0">
+                {{ ai_error }}
+            </div>
+
+        {% endif %}
+
+
+        {% if generated_command %}
+
+            <div class="generated-script-section">
+
+                <div class="generated-script-heading">
+
+                    <div>
+
+                        <h6 class="mb-1">
+                            Oluşturulan PowerShell Scripti
+                        </h6>
+
+                        <p class="text-muted small mb-0">
+                            Çalıştırmadan önce içeriği kontrol edin.
+                        </p>
+
+                    </div>
+
+                    <span class="section-count-label">
+                        Önizleme
+                    </span>
+
+                </div>
+
+                <textarea
+                    class="form-control font-monospace generated-script-output"
+                    rows="9"
+                    readonly
+                >{{ generated_command }}</textarea>
+
+                {% if client.status == "online" %}
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'script_execution.open_generated_script'
+                        ) }}"
+                        class="mt-3"
+                    >
+                    <input
+    type="hidden"
+    name="csrf_token"
+    value="{{ csrf_token() }}"
+>
+
+                        <input
+                            type="hidden"
+                            name="client_id"
+                            value="{{ client.id }}"
+                        >
+
+                        <textarea
+                            name="script_content"
+                            hidden
+                        >{{ generated_command }}</textarea>
+
+                        <button
+                            type="submit"
+                            class="btn btn-success"
+                        >
+                            Scripti Düzenle ve Çalıştır
+                        </button>
+
+                    </form>
+
+                {% endif %}
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+{% endblock %}
+
+
+{% block page_scripts %}
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/nmap_scan_status.js'
+    ) }}"
+></script>
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/client_detail.js'
+    ) }}"
+></script>
 
 {% endblock %}

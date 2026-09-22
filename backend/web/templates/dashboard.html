@@ -2,20 +2,558 @@
 
 {% block content %}
 
-<h2 class="mb-1">Dashboard</h2>
-<p class="text-muted">Sistemin genel durumunu buradan takip edebilirsiniz.</p>
+<div class="dashboard-header">
 
-<hr>
+    <div>
 
-<div class="row mt-4">
-    <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title">Toplam Client</h5>
-                <h2>{{ total_clients }}</h2>
-            </div>
-        </div>
+        <span class="page-eyebrow">
+            Genel Bakış
+        </span>
+
+        <h2 class="mb-1">
+            Kontrol Paneli
+        </h2>
+
+        <p class="text-muted mb-0">
+            Hoş geldiniz,
+            <strong>
+                {{ session.username }}
+            </strong>.
+            Sistemlerin güncel durumunu buradan takip
+            edebilirsiniz.
+        </p>
+
     </div>
+
+    <div class="dashboard-header-actions">
+
+        <a
+            href="{{ url_for('client.clients') }}"
+            class="btn btn-outline-primary"
+        >
+            İstemcileri Görüntüle
+        </a>
+
+        <a
+            href="{{ url_for(
+                'script_execution.execute_script_central'
+            ) }}"
+            class="btn btn-primary"
+        >
+            Script Çalıştır
+        </a>
+
+    </div>
+
+</div>
+
+
+<div class="row g-3 mb-4">
+
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="card metric-card h-100">
+
+            <div class="card-body">
+
+                <div class="metric-card-header">
+
+                    <div class="metric-icon metric-icon-primary">
+                        PC
+                    </div>
+
+                    <span class="metric-label">
+                        Toplam İstemci
+                    </span>
+
+                </div>
+
+                <div class="metric-value">
+                    {{ total_clients | default(0) }}
+                </div>
+
+                <div class="metric-description">
+                    Sisteme kayıtlı cihaz sayısı
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="card metric-card h-100">
+
+            <div class="card-body">
+
+                <div class="metric-card-header">
+
+                    <div class="metric-icon metric-icon-success">
+                        ON
+                    </div>
+
+                    <span class="metric-label">
+                        Çevrimiçi
+                    </span>
+
+                </div>
+
+                <div class="metric-value metric-value-success">
+                    {{ online_clients | default(0) }}
+                </div>
+
+                <div class="metric-description">
+
+                    <span class="status-indicator online">
+                    </span>
+
+                    Bağlantısı aktif istemciler
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="card metric-card h-100">
+
+            <div class="card-body">
+
+                <div class="metric-card-header">
+
+                    <div class="metric-icon metric-icon-danger">
+                        OFF
+                    </div>
+
+                    <span class="metric-label">
+                        Çevrimdışı
+                    </span>
+
+                </div>
+
+                <div class="metric-value metric-value-danger">
+                    {{ offline_clients | default(0) }}
+                </div>
+
+                <div class="metric-description">
+
+                    <span class="status-indicator offline">
+                    </span>
+
+                    Bağlantısı kapalı istemciler
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="card metric-card h-100">
+
+            <div class="card-body">
+
+                <div class="metric-card-header">
+
+                    <div class="metric-icon metric-icon-neutral">
+                        LA
+                    </div>
+
+                    <span class="metric-label">
+                        Son Aktif İstemci
+                    </span>
+
+                </div>
+
+                {% if last_active_client %}
+
+                    <div class="metric-client-name">
+                        {{ last_active_client.hostname }}
+                    </div>
+
+                    <div class="metric-description">
+                        Son görülme:
+                        {{ last_active_client.last_seen or "-" }}
+                    </div>
+
+                {% else %}
+
+                    <div class="metric-client-name text-muted">
+                        İstemci bulunmuyor
+                    </div>
+
+                    <div class="metric-description">
+                        Henüz bağlantı kaydı oluşmadı
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="card quick-actions-card mb-4">
+
+    <div class="card-header">
+
+        <div>
+
+            <h5 class="mb-1">
+                Hızlı İşlemler
+            </h5>
+
+            <p class="text-muted small mb-0">
+                Sık kullanılan yönetim işlemlerine ulaşın.
+            </p>
+
+        </div>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="row g-3">
+
+            <div class="col-md-6 col-xl-4">
+
+                <a
+                    href="{{ url_for('client.clients') }}"
+                    class="quick-action-item"
+                >
+
+                    <span class="quick-action-icon">
+                        PC
+                    </span>
+
+                    <span class="quick-action-content">
+
+                        <strong>
+                            İstemci Listesi
+                        </strong>
+
+                        <small>
+                            Kayıtlı istemcileri görüntüleyin.
+                        </small>
+
+                    </span>
+
+                    <span class="quick-action-arrow">
+                        →
+                    </span>
+
+                </a>
+
+            </div>
+
+
+            <div class="col-md-6 col-xl-4">
+
+                <a
+                    href="{{ url_for(
+                        'script_execution.execute_script_central'
+                    ) }}"
+                    class="quick-action-item"
+                >
+
+                    <span class="quick-action-icon">
+                        &gt;_
+                    </span>
+
+                    <span class="quick-action-content">
+
+                        <strong>
+                            Script Gönder
+                        </strong>
+
+                        <small>
+                            İstemci veya gruplarda script çalıştırın.
+                        </small>
+
+                    </span>
+
+                    <span class="quick-action-arrow">
+                        →
+                    </span>
+
+                </a>
+
+            </div>
+
+
+            {% if session.get("role_name") == "admin" %}
+
+            <div class="col-md-6 col-xl-4">
+
+                <a
+                    href="{{ url_for('logs.logs') }}"
+                    class="quick-action-item"
+                >
+
+                    <span class="quick-action-icon">
+                        LOG
+                    </span>
+
+                    <span class="quick-action-content">
+
+                        <strong>
+                            Sistem Logları
+                        </strong>
+
+                        <small>
+                            Sistem olaylarını ve işlem kayıtlarını inceleyin.
+                        </small>
+
+                    </span>
+
+                    <span class="quick-action-arrow">
+                        →
+                    </span>
+
+                </a>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="card recent-executions-card">
+
+    <div class="card-header">
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+
+            <div>
+
+                <h5 class="mb-1">
+                    Son Script İşlemleri
+                </h5>
+
+                <p class="text-muted small mb-0">
+                    En son oluşturulan çalıştırma kayıtları
+                </p>
+
+            </div>
+
+            <span class="section-count-label">
+                Son 10 kayıt
+            </span>
+
+        </div>
+
+    </div>
+
+    <div class="card-body p-0">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead>
+
+                    <tr>
+                        <th class="ps-4">
+                            ID
+                        </th>
+
+                        <th>
+                            İstemci
+                        </th>
+
+                        <th>
+                            Durum
+                        </th>
+
+                        <th>
+                            Exit Code
+                        </th>
+
+                        <th>
+                            Oluşturulma Tarihi
+                        </th>
+
+                        <th class="text-end pe-4">
+                            İşlem
+                        </th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for execution in recent_executions | default([]) %}
+
+                    <tr>
+
+                        <td class="ps-4">
+
+                            <span class="execution-id">
+                                #{{ execution.id }}
+                            </span>
+
+                        </td>
+
+                        <td>
+
+                            <div class="execution-client">
+
+                                <span class="execution-client-mark">
+                                    {{ execution.hostname[0] | upper
+                                        if execution.hostname
+                                        else "?"
+                                    }}
+                                </span>
+
+                                <span>
+                                    {{ execution.hostname or "-" }}
+                                </span>
+
+                            </div>
+
+                        </td>
+
+                        <td>
+
+                            {% if execution.status == "completed" %}
+
+                                <span class="status-badge status-completed">
+                                    Tamamlandı
+                                </span>
+
+                            {% elif execution.status == "failed" %}
+
+                                <span class="status-badge status-failed">
+                                    Başarısız
+                                </span>
+
+                            {% elif execution.status == "running" %}
+
+                                <span class="status-badge status-running">
+                                    Çalışıyor
+                                </span>
+
+                            {% elif execution.status == "assigned" %}
+
+                                <span class="status-badge status-assigned">
+                                    Atandı
+                                </span>
+
+                            {% elif execution.status == "pending" %}
+
+                                <span class="status-badge status-pending">
+                                    Bekliyor
+                                </span>
+
+                            {% else %}
+
+                                <span class="status-badge status-neutral">
+                                    {{ execution.status }}
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {% if execution.exit_code is not none %}
+
+                                <code class="exit-code">
+                                    {{ execution.exit_code }}
+                                </code>
+
+                            {% else %}
+
+                                <span class="text-muted">
+                                    —
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+                            {{ execution.created_at or "-" }}
+                        </td>
+
+                        <td class="text-end pe-4">
+
+                            <a
+                                href="{{ url_for(
+                                    'script_execution.execution_detail',
+                                    execution_id=execution.id
+                                ) }}"
+                                class="btn btn-sm btn-outline-primary"
+                            >
+                                Detay
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% else %}
+
+                    <tr>
+
+                        <td
+                            colspan="6"
+                            class="text-center py-5"
+                        >
+
+                            <div class="empty-state">
+
+                                <span class="empty-state-mark">
+                                    &gt;_
+                                </span>
+
+                                <strong>
+                                    Henüz script kaydı bulunmuyor
+                                </strong>
+
+                                <span>
+                                    Çalıştırılan scriptler burada
+                                    listelenecektir.
+                                </span>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
 </div>
 
 {% endblock %}

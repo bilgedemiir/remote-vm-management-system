@@ -2,57 +2,781 @@
 
 {% block content %}
 
-<h2 class="mb-1">Clients</h2>
-<p class="text-muted">Kayıtlı istemcileri bu sayfadan görüntüleyebilirsiniz.</p>
+{% with messages = get_flashed_messages(
+    with_categories=true
+) %}
 
-<hr>
+    {% if messages %}
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        <table class="table table-hover align-middle">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Hostname</th>
-                    <th>IP Address</th>
-                    <th>Operating System</th>
-                    <th>Status</th>
-                    <th>First Seen</th>
-                    <th>Last Seen</th>
-                </tr>
-            </thead>
+        <div class="clients-page-alerts">
 
-            <tbody>
-                {% for client in clients %}
-                <tr>
-                    <td>{{ client.id }}</td>
-                    <td>
-                        <a href="/clients/{{ client.id }}" class="text-decoration-none fw-semibold">
-                            {{ client.hostname }}
-                        </a>
-                    </td>
-                    <td>{{ client.ip_address }}</td>
-                    <td>{{ client.operating_system }}</td>
-                    <td>
-                        {% if client.status == "online" %}
-                            <span class="badge bg-success">Online</span>
-                        {% else %}
-                            <span class="badge bg-secondary">Offline</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ client.first_seen }}</td>
-                    <td>{{ client.last_seen }}</td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="7" class="text-center text-muted">
-                        Henüz kayıtlı client yok.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+            {% for category, message in messages %}
+
+                <div
+                    class="alert alert-{{ category }} alert-dismissible fade show"
+                    role="alert"
+                >
+                    {{ message }}
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Kapat"
+                    >
+                    </button>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+{% endwith %}
+
+<div class="clients-page-header">
+
+    <div>
+
+        <span class="page-eyebrow">
+            İstemci Yönetimi
+        </span>
+
+        <h2 class="mb-1">
+            İstemciler
+        </h2>
+
+        <p class="text-muted mb-0">
+            Kayıtlı istemcileri görüntüleyin, filtreleyin
+            ve gruplarını yönetin.
+        </p>
+
     </div>
+
+    <div class="clients-header-actions">
+
+        <div class="clients-scan-actions">
+
+            <form
+                method="POST"
+                action="{{ url_for(
+                    'client.scan_all_client_cves'
+                ) }}"
+                class="m-0"
+            >
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                >
+
+                <button
+                    type="submit"
+                    class="btn btn-outline-danger"
+                >
+                    Toplu CVE Taraması
+                </button>
+
+            </form>
+
+            <form
+                method="POST"
+                action="{{ url_for(
+                'client.start_all_nmap_scans'
+                ) }}"
+                class="m-0"
+            >
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                >
+
+                <button
+                    type="submit"
+                    class="btn btn-outline-primary"
+                >
+                    Toplu Nmap Taraması
+                </button>
+
+            </form>
+
+        </div>
+
+        <div class="record-count-pill">
+
+            <span class="record-count-value">
+                {{ pagination.total_records }}
+            </span>
+
+            <span>
+                kayıtlı istemci
+            </span>
+
+        </div>
+
+    </div>
+
 </div>
+
+<div class="card client-filter-card mb-4">
+
+    <div class="card-body">
+
+        <form
+            method="GET"
+            action="{{ url_for('client.clients') }}"
+        >
+
+            <div class="row g-3 align-items-end">
+
+                <div class="col-xl-6">
+
+                    <label
+                        for="clientSearch"
+                        class="form-label"
+                    >
+                        İstemci Ara
+                    </label>
+
+                    <input
+                        type="text"
+                        id="clientSearch"
+                        name="search"
+                        class="form-control"
+                        value="{{ filters.search }}"
+                        placeholder="Bilgisayar adı, IP, UUID, kullanıcı veya MAC adresi"
+                    >
+
+                </div>
+
+                <div class="col-sm-6 col-xl-2">
+
+                    <label
+                        for="clientStatus"
+                        class="form-label"
+                    >
+                        Bağlantı Durumu
+                    </label>
+
+                    <select
+                        id="clientStatus"
+                        name="status"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            Tüm durumlar
+                        </option>
+
+                        <option
+                            value="online"
+                            {% if filters.status == "online" %}
+                                selected
+                            {% endif %}
+                        >
+                            Çevrimiçi
+                        </option>
+
+                        <option
+                            value="offline"
+                            {% if filters.status == "offline" %}
+                                selected
+                            {% endif %}
+                        >
+                            Çevrimdışı
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-sm-6 col-xl-2">
+
+                    <label
+                        for="clientPerPage"
+                        class="form-label"
+                    >
+                        Sayfa Başına
+                    </label>
+
+                    <select
+                        id="clientPerPage"
+                        name="per_page"
+                        class="form-select"
+                    >
+
+                        {% for amount in [10, 25, 50] %}
+
+                            <option
+                                value="{{ amount }}"
+                                {% if filters.per_page == amount %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ amount }} kayıt
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <div class="col-xl-2">
+
+                    <div class="client-filter-actions">
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                        >
+                            Filtrele
+                        </button>
+
+                        <a
+                            href="{{ url_for('client.clients') }}"
+                            class="btn btn-outline-secondary"
+                        >
+                            Temizle
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<form
+    id="bulkGroupForm"
+    method="POST"
+    action="{{ url_for('client.bulk_add_groups') }}"
+>
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="{{ csrf_token() }}"
+    >
+
+    <div class="card client-list-card">
+
+        <div class="card-header client-list-header">
+
+            <div>
+
+                <h5 class="mb-1">
+                    İstemci Listesi
+                </h5>
+
+                <p class="text-muted small mb-0">
+                    Çevrimiçi istemciler listenin başında
+                    gösterilir.
+                </p>
+
+            </div>
+
+            {% if session.get("role_name") == "admin" %}
+
+                <div class="bulk-selection-actions">
+
+                    <span
+                        id="selectedClientCount"
+                        class="selected-client-count"
+                    >
+                        0 istemci seçildi
+                    </span>
+
+                    <button
+                        type="button"
+                        id="bulkAssignButton"
+                        class="btn btn-primary btn-sm"
+                        disabled
+                    >
+                        Seçilenleri Gruba Ata
+                    </button>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
+        {% if session.get("role_name") == "admin" %}
+
+            <div
+                id="bulkGroupPanel"
+                class="client-bulk-panel d-none"
+            >
+
+                <div class="bulk-panel-heading">
+
+                    <div>
+
+                        <h6 class="mb-1">
+                            Grup Seçimi
+                        </h6>
+
+                        <p class="text-muted small mb-0">
+                            Seçili istemcilerin ekleneceği
+                            grupları belirleyin.
+                        </p>
+
+                    </div>
+
+                    <span class="bulk-panel-label">
+                        Toplu İşlem
+                    </span>
+
+                </div>
+
+                {% if groups %}
+
+                    <div class="bulk-group-options">
+
+                        {% for group in groups %}
+
+                            <div class="bulk-group-option">
+
+                                <input
+                                    class="form-check-input bulk-group-checkbox"
+                                    type="checkbox"
+                                    name="group_ids"
+                                    value="{{ group.id }}"
+                                    id="bulk-group-{{ group.id }}"
+                                >
+
+                                <label
+                                    for="bulk-group-{{ group.id }}"
+                                >
+
+                                    <strong>
+                                        {{ group.name }}
+                                    </strong>
+
+                                    <small>
+                                        {{ group.description
+                                            or "Açıklama bulunmuyor."
+                                        }}
+                                    </small>
+
+                                </label>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                    <div class="bulk-panel-actions">
+
+                        <button
+                            type="submit"
+                            id="saveBulkGroupsButton"
+                            class="btn btn-primary btn-sm"
+                            disabled
+                        >
+                            Gruplara Ata
+                        </button>
+
+                        <button
+                            type="button"
+                            id="cancelBulkGroupsButton"
+                            class="btn btn-outline-secondary btn-sm"
+                        >
+                            Vazgeç
+                        </button>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="alert alert-warning mb-0">
+                        Toplu atama yapabilmek için önce bir
+                        istemci grubu oluşturmalısınız.
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        {% endif %}
+
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive client-table-wrapper">
+
+                <table class="table table-hover align-middle">
+
+                    <thead>
+
+                        <tr>
+
+                            {% if session.get("role_name") == "admin" %}
+
+                                <th class="ps-4 client-select-column">
+
+                                    <input
+                                        type="checkbox"
+                                        id="selectAllClients"
+                                        class="form-check-input"
+                                        title="Bu sayfadaki tüm istemcileri seç"
+                                        aria-label="Tüm istemcileri seç"
+                                    >
+
+                                </th>
+
+                            {% endif %}
+
+                            <th
+                                {% if session.get("role_name") != "admin" %}
+                                    class="ps-4"
+                                {% endif %}
+                            >
+                                ID
+                            </th>
+
+                            <th>
+                                İstemci
+                            </th>
+
+                            <th>
+                                IP Adresi
+                            </th>
+
+                            <th>
+                                İşletim Sistemi
+                            </th>
+
+                            <th>
+                                Oturum Kullanıcısı
+                            </th>
+
+                            <th>
+                                Durum
+                            </th>
+
+                            <th>
+                                Kayıt Tarihi
+                            </th>
+
+                            <th>
+                                Son Görülme
+                            </th>
+
+                            <th class="text-end pe-4">
+                                İşlem
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for client in clients %}
+
+                            <tr class="client-table-row">
+
+                                {% if session.get("role_name") == "admin" %}
+
+                                    <td class="ps-4">
+
+                                        <input
+                                            type="checkbox"
+                                            name="client_ids"
+                                            value="{{ client.id }}"
+                                            class="form-check-input client-select"
+                                            aria-label="{{ client.hostname }} istemcisini seç"
+                                        >
+
+                                    </td>
+
+                                {% endif %}
+
+                                <td>
+
+                                    <span class="client-id">
+                                        #{{ client.id }}
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    <div class="client-identity">
+
+                                        <span class="client-avatar">
+
+                                            {{ client.hostname[0] | upper
+                                                if client.hostname
+                                                else "?"
+                                            }}
+
+                                        </span>
+
+                                        <div class="client-identity-content">
+
+                                            <a
+                                                href="{{ url_for(
+                                                    'client.client_detail',
+                                                    client_id=client.id
+                                                ) }}"
+                                                class="client-hostname"
+                                            >
+                                                {{ client.hostname }}
+                                            </a>
+
+                                            <span class="client-uuid">
+                                                {{ client.uuid }}
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+                                <td class="text-nowrap">
+
+                                    <code class="client-ip">
+                                        {{ client.ip_address or "—" }}
+                                    </code>
+
+                                </td>
+
+                                <td class="client-os-column">
+
+                                    <span class="client-os-text">
+                                        {{ client.windows_version or "—" }}
+                                    </span>
+
+                                </td>
+
+                                <td>
+                                    {{ client.logged_in_user or "—" }}
+                                </td>
+
+                                <td>
+
+                                    {% if client.status == "online" %}
+
+                                        <span class="client-status online">
+
+                                            <span class="client-status-dot">
+                                            </span>
+
+                                            Çevrimiçi
+
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="client-status offline">
+
+                                            <span class="client-status-dot">
+                                            </span>
+
+                                            Çevrimdışı
+
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                                <td class="text-nowrap">
+                                    {{ client.registered_at or "—" }}
+                                </td>
+
+                                <td class="text-nowrap">
+                                    {{ client.last_seen or "—" }}
+                                </td>
+
+                                <td class="text-end pe-4">
+
+                                    <a
+                                        href="{{ url_for(
+                                            'client.client_detail',
+                                            client_id=client.id
+                                        ) }}"
+                                        class="btn btn-sm btn-outline-primary"
+                                    >
+                                        Detay
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+                        {% else %}
+
+                            <tr>
+
+                                <td
+                                    colspan="{{ 10
+                                        if session.get('role_name') == 'admin'
+                                        else 9
+                                    }}"
+                                    class="py-5"
+                                >
+
+                                    <div class="empty-state">
+
+                                        <span class="empty-state-mark">
+                                            PC
+                                        </span>
+
+                                        <strong>
+                                            İstemci bulunamadı
+                                        </strong>
+
+                                        <span>
+                                            Arama veya filtre kriterlerini
+                                            değiştirerek tekrar deneyin.
+                                        </span>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</form>
+
+
+{% if pagination.total_pages > 1 %}
+
+<div class="client-pagination">
+
+    <div class="client-pagination-summary">
+
+        Toplam
+        <strong>
+            {{ pagination.total_records }}
+        </strong>
+        kayıt — Sayfa
+        <strong>
+            {{ pagination.page }}
+        </strong>
+        / {{ pagination.total_pages }}
+
+    </div>
+
+    <nav aria-label="İstemci sayfaları">
+
+        <ul class="pagination mb-0">
+
+            <li class="page-item
+                {% if not pagination.has_previous %}
+                    disabled
+                {% endif %}
+            ">
+
+                <a
+                    class="page-link"
+                    href="{{ url_for(
+                        'client.clients',
+                        page=pagination.page - 1,
+                        per_page=filters.per_page,
+                        search=filters.search,
+                        status=filters.status
+                    ) }}"
+                >
+                    Önceki
+                </a>
+
+            </li>
+
+            {% for page_number in range(
+                start_page,
+                end_page + 1
+            ) %}
+
+                <li class="page-item
+                    {% if page_number == pagination.page %}
+                        active
+                    {% endif %}
+                ">
+
+                    <a
+                        class="page-link"
+                        href="{{ url_for(
+                            'client.clients',
+                            page=page_number,
+                            per_page=filters.per_page,
+                            search=filters.search,
+                            status=filters.status
+                        ) }}"
+                    >
+                        {{ page_number }}
+                    </a>
+
+                </li>
+
+            {% endfor %}
+
+            <li class="page-item
+                {% if not pagination.has_next %}
+                    disabled
+                {% endif %}
+            ">
+
+                <a
+                    class="page-link"
+                    href="{{ url_for(
+                        'client.clients',
+                        page=pagination.page + 1,
+                        per_page=filters.per_page,
+                        search=filters.search,
+                        status=filters.status
+                    ) }}"
+                >
+                    Sonraki
+                </a>
+
+            </li>
+
+        </ul>
+
+    </nav>
+
+</div>
+
+{% endif %}
+
+{% endblock %}
+
+
+{% block page_scripts %}
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/clients.js'
+    ) }}"
+></script>
 
 {% endblock %}

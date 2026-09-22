@@ -1,0 +1,453 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if has_active_scans %}
+
+<div
+    id="nmapBatchAutoRefresh"
+    data-refresh-interval="3000"
+    hidden
+>
+</div>
+
+{% endif %}
+
+
+{% with messages = get_flashed_messages(
+    with_categories=true
+) %}
+
+    {% if messages %}
+
+        <div class="nmap-batch-alerts">
+
+            {% for category, message in messages %}
+
+                <div
+                    class="alert alert-{{ category }} alert-dismissible fade show"
+                    role="alert"
+                >
+                    {{ message }}
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Kapat"
+                    >
+                    </button>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+{% endwith %}
+
+
+<div class="nmap-batch-page-header">
+
+    <div>
+
+        <span class="page-eyebrow">
+            Nmap Yönetimi
+        </span>
+
+        <h2 class="mb-1">
+            Toplu Ağ Port Kontrolü
+        </h2>
+
+        <p class="text-muted mb-0">
+            İstemcilerin ağ üzerinden gerçekleştirilen
+            port tarama sonuçlarını ayrı ayrı görüntüleyin.
+        </p>
+
+    </div>
+
+    <div class="nmap-batch-header-actions">
+
+        <button
+            type="button"
+            class="btn btn-outline-primary"
+            id="refreshNmapBatchButton"
+        >
+            Yenile
+        </button>
+
+        <a
+            href="{{ url_for(
+                'client.clients'
+            ) }}"
+            class="btn btn-outline-secondary"
+        >
+            İstemcilere Dön
+        </a>
+
+    </div>
+
+</div>
+
+
+<div class="row g-3 mb-4">
+
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="card nmap-batch-metric-card h-100">
+
+            <div class="card-body">
+
+                <span class="nmap-batch-metric-label">
+                    Toplam İstemci
+                </span>
+
+                <strong class="nmap-batch-metric-value">
+                    {{ batch.total_clients }}
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="card nmap-batch-metric-card h-100">
+
+            <div class="card-body">
+
+                <span class="nmap-batch-metric-label">
+                    Tamamlanan
+                </span>
+
+                <strong class="nmap-batch-metric-value text-success">
+                    {{ batch.completed_count }}
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="card nmap-batch-metric-card h-100">
+
+            <div class="card-body">
+
+                <span class="nmap-batch-metric-label">
+                    Devam Eden
+                </span>
+
+                <strong class="nmap-batch-metric-value text-primary">
+                    {{ active_count }}
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="card nmap-batch-metric-card h-100">
+
+            <div class="card-body">
+
+                <span class="nmap-batch-metric-label">
+                    Açık Port
+                </span>
+
+                <strong class="nmap-batch-metric-value text-danger">
+                    {{ batch.open_port_count }}
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="card nmap-batch-results-card">
+
+    <div class="card-header">
+
+        <div>
+
+            <h5 class="mb-1">
+                İstemci Sonuçları
+            </h5>
+
+            <p class="text-muted small mb-0">
+                Her istemcinin Nmap tarama durumu ve
+                ağ üzerinden görülen port özeti
+            </p>
+
+        </div>
+
+        <span class="nmap-batch-id">
+            {{ batch.batch_uuid[:8] }}
+        </span>
+
+    </div>
+
+
+    {% if has_active_scans %}
+
+        <div class="nmap-batch-refresh-notice">
+
+            <span class="nmap-batch-refresh-indicator">
+            </span>
+
+            Toplu Nmap taraması devam ediyor. Sonuçlar
+            3 saniyede bir otomatik yenileniyor.
+
+        </div>
+
+    {% endif %}
+
+
+    <div class="card-body p-0">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle mb-0">
+
+                <thead>
+
+                    <tr>
+
+                        <th class="ps-4">
+                            İstemci
+                        </th>
+
+                        <th>
+                            Durum
+                        </th>
+
+                        <th>
+                            Taranan
+                        </th>
+
+                        <th>
+                            Açık
+                        </th>
+
+                        <th>
+                            Filtrelenmiş
+                        </th>
+
+                        <th>
+                            Kapalı
+                        </th>
+
+                        <th>
+                            Süre
+                        </th>
+
+                        <th class="text-end pe-4">
+                            İşlem
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for scan in scans %}
+
+                        <tr>
+
+                            <td class="ps-4">
+
+                                <div class="nmap-batch-client">
+
+                                    <span class="nmap-batch-client-mark">
+
+                                        {{ scan.hostname[0] | upper
+                                            if scan.hostname
+                                            else "?"
+                                        }}
+
+                                    </span>
+
+                                    <div>
+
+                                        <strong>
+                                            {{ scan.hostname }}
+                                        </strong>
+
+                                        <small>
+                                            {{ scan.target_ip }}
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                {% if scan.status == "completed" %}
+
+                                    <span class="status-badge status-completed">
+                                        Tamamlandı
+                                    </span>
+
+                                {% elif scan.status == "failed" %}
+
+                                    <span class="status-badge status-failed">
+                                        Başarısız
+                                    </span>
+
+                                {% elif scan.status == "running" %}
+
+                                    <span class="status-badge status-running">
+                                        Taranıyor
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="status-badge status-pending">
+                                        Bekliyor
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+                                {{ scan.scanned_port_count }}
+                            </td>
+
+                            <td>
+
+                                <span class="nmap-batch-port-count is-open">
+                                    {{ scan.open_port_count }}
+                                </span>
+
+                            </td>
+
+                            <td>
+
+                                <span class="nmap-batch-port-count is-filtered">
+                                    {{ scan.filtered_port_count }}
+                                </span>
+
+                            </td>
+
+                            <td>
+
+                                <span class="nmap-batch-port-count is-closed">
+                                    {{ scan.closed_port_count }}
+                                </span>
+
+                            </td>
+
+                            <td>
+
+                                {% if scan.duration_seconds is not none %}
+
+                                    <span class="nmap-batch-duration">
+                                        {{ scan.duration_seconds }} sn
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="text-muted">
+                                        —
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td class="text-end pe-4">
+
+                                {% if scan.status == "completed" %}
+
+                                    <a
+                                        href="{{ url_for(
+                                            'client.client_detail',
+                                            client_id=scan.client_id,
+                                            show_ports=1,
+                                            _anchor='portInventorySection'
+                                        ) }}"
+                                        class="btn btn-sm btn-outline-primary"
+                                    >
+                                        Portları Gör
+                                    </a>
+
+                                {% else %}
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-outline-secondary"
+                                        disabled
+                                    >
+                                        Sonuç Bekleniyor
+                                    </button>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                        {% if scan.status == "failed"
+                            and scan.error_message %}
+
+                            <tr>
+
+                                <td
+                                    colspan="8"
+                                    class="nmap-batch-error-cell"
+                                >
+                                    <strong>
+                                        Tarama hatası:
+                                    </strong>
+
+                                    {{ scan.error_message }}
+
+                                </td>
+
+                            </tr>
+
+                        {% endif %}
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block page_scripts %}
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/nmap_scan_batch_detail.js'
+    ) }}"
+></script>
+
+{% endblock %}

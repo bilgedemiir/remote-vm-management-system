@@ -1,0 +1,465 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if execution.status in [
+    "pending",
+    "assigned",
+    "running"
+] %}
+
+<div
+    id="executionAutoRefresh"
+    data-refresh-interval="3000"
+    hidden
+>
+</div>
+
+{% endif %}
+
+
+<div class="execution-page-header">
+
+    <div>
+
+        <span class="page-eyebrow">
+            Script Çalıştırma Kaydı
+        </span>
+
+        <h2 class="mb-1">
+            Script Sonucu
+        </h2>
+
+        <p class="text-muted mb-0">
+            Execution
+            <strong>
+                #{{ execution.id }}
+            </strong>
+            için çalışma ve çıktı detayları
+        </p>
+
+    </div>
+
+    <div class="execution-header-actions">
+
+        <button
+            type="button"
+            class="btn btn-outline-primary"
+            id="refreshExecutionButton"
+        >
+            Yenile
+        </button>
+
+        <a
+            href="{{ url_for(
+                'script_execution.execution_history',
+                client_id=execution.client_id
+            ) }}"
+            class="btn btn-outline-secondary"
+        >
+            Script Geçmişi
+        </a>
+
+    </div>
+
+</div>
+
+
+<div class="card execution-detail-card">
+
+    <div class="card-header execution-detail-heading">
+
+        <div>
+
+            <h5 class="mb-1">
+                Execution #{{ execution.id }}
+            </h5>
+
+            <p class="text-muted small mb-0">
+
+                {% if execution.hostname %}
+
+                    {{ execution.hostname }}
+
+                {% else %}
+
+                    İstemci #{{ execution.client_id }}
+
+                {% endif %}
+
+            </p>
+
+        </div>
+
+        {% if execution.status == "completed" %}
+
+            <span class="status-badge status-completed">
+                Tamamlandı
+            </span>
+
+        {% elif execution.status == "failed" %}
+
+            <span class="status-badge status-failed">
+                Başarısız
+            </span>
+
+        {% elif execution.status == "running" %}
+
+            <span class="status-badge status-running">
+                Çalışıyor
+            </span>
+
+        {% elif execution.status == "assigned" %}
+
+            <span class="status-badge status-assigned">
+                Atandı
+            </span>
+
+        {% else %}
+
+            <span class="status-badge status-pending">
+                Bekliyor
+            </span>
+
+        {% endif %}
+
+    </div>
+
+
+    {% if execution.status in [
+        "pending",
+        "assigned",
+        "running"
+    ] %}
+
+        <div class="execution-refresh-notice">
+
+            <span class="batch-refresh-indicator">
+            </span>
+
+            İşlem devam ediyor. Sonuçlar 3 saniyede bir
+            otomatik yenileniyor.
+
+        </div>
+
+    {% endif %}
+
+
+    <div class="card-body">
+
+        <div class="row g-3 mb-4">
+
+            <div class="col-sm-6 col-xl-3">
+
+                <div class="execution-info-card">
+
+                    <span>
+                        Execution ID
+                    </span>
+
+                    <strong class="execution-number">
+                        #{{ execution.id }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-sm-6 col-xl-3">
+
+                <div class="execution-info-card">
+
+                    <span>
+                        Exit Code
+                    </span>
+
+                    {% if execution.exit_code is not none %}
+
+                        <strong
+                            class="{% if execution.exit_code == 0 %}
+                                text-success
+                            {% else %}
+                                text-danger
+                            {% endif %}"
+                        >
+                            {{ execution.exit_code }}
+                        </strong>
+
+                    {% else %}
+
+                        <strong class="text-muted">
+                            —
+                        </strong>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <div class="col-sm-6 col-xl-3">
+
+                <div class="execution-info-card">
+
+                    <span>
+                        Çalıştıran Kullanıcı
+                    </span>
+
+                    <strong>
+                        {{ execution.executed_by or "—" }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-sm-6 col-xl-3">
+
+                <div class="execution-info-card">
+
+                    <span>
+                        Çalışma Süresi
+                    </span>
+
+                    {% if execution.duration_ms is not none %}
+
+                        <strong>
+                            {{ execution.duration_ms }} ms
+                        </strong>
+
+                    {% else %}
+
+                        <strong class="text-muted">
+                            —
+                        </strong>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <section class="execution-output-section">
+
+            <div class="execution-output-heading">
+
+                <div>
+
+                    <h5 class="mb-1">
+                        PowerShell Scripti
+                    </h5>
+
+                    <p class="text-muted small mb-0">
+                        İstemciye gönderilen script içeriği
+                    </p>
+
+                </div>
+
+                <span class="output-type-label">
+                    SCRIPT
+                </span>
+
+            </div>
+
+            <pre class="execution-code-output">{{ execution.script_content or "" }}</pre>
+
+        </section>
+
+
+        <section class="execution-output-section">
+
+            <div class="execution-output-heading">
+
+                <div>
+
+                    <h5 class="mb-1">
+                        Standart Çıktı
+                    </h5>
+
+                    <p class="text-muted small mb-0">
+                        Scriptin ürettiği normal çıktı
+                    </p>
+
+                </div>
+
+                <span class="output-type-label output-type-success">
+                    STDOUT
+                </span>
+
+            </div>
+
+            {% if execution.stdout %}
+
+                <pre class="execution-code-output">{{ execution.stdout }}</pre>
+
+            {% else %}
+
+                <div class="execution-empty-output">
+                    Standart çıktı bulunmuyor.
+                </div>
+
+            {% endif %}
+
+        </section>
+
+
+        {% if execution.stderr %}
+
+            <section class="execution-output-section">
+
+                <div class="execution-output-heading">
+
+                    <div>
+
+                        <h5 class="mb-1">
+                            Hata Çıktısı
+                        </h5>
+
+                        <p class="text-muted small mb-0">
+                            Scriptin ürettiği hata mesajları
+                        </p>
+
+                    </div>
+
+                    <span class="output-type-label output-type-danger">
+                        STDERR
+                    </span>
+
+                </div>
+
+                <pre class="execution-code-output execution-error-output">{{ execution.stderr }}</pre>
+
+            </section>
+
+        {% elif execution.status == "completed" %}
+
+            <div class="execution-success-message">
+
+                <span class="execution-success-mark">
+                    ✓
+                </span>
+
+                Script tamamlandı ve herhangi bir hata çıktısı
+                üretmedi.
+
+            </div>
+
+        {% endif %}
+
+
+        {% if execution.rollback_script %}
+
+            <section class="execution-output-section rollback-output-section">
+
+                <div class="execution-output-heading">
+
+                    <div>
+
+                        <h5 class="mb-1">
+                            Rollback Scripti
+                        </h5>
+
+                        <p class="text-muted small mb-0">
+                            Yapılan işlemi geri almak için
+                            kullanılabilecek script
+                        </p>
+
+                    </div>
+
+                    <span class="output-type-label output-type-warning">
+                        ROLLBACK
+                    </span>
+
+                </div>
+
+                <pre class="execution-code-output">{{ execution.rollback_script }}</pre>
+
+            </section>
+
+        {% endif %}
+
+
+        {% if execution.status == "completed" %}
+
+            <div class="execution-rollback-actions">
+
+                <div>
+
+                    <h6 class="mb-1">
+                        Rollback Durumu
+                    </h6>
+
+                    <p class="text-muted small mb-0">
+                        Tamamlanan script için geri alma işlemini
+                        buradan yönetebilirsiniz.
+                    </p>
+
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+
+                    {% if execution.rolled_back %}
+
+                        <button
+                            type="button"
+                            class="btn btn-success"
+                            disabled
+                        >
+                            Rollback Tamamlandı
+                        </button>
+
+                    {% elif execution.rollback_execution_id %}
+
+                        <a
+                            href="{{ url_for(
+                                'script_execution.execution_detail',
+                                execution_id=execution.rollback_execution_id
+                            ) }}"
+                            class="btn btn-warning"
+                        >
+                            Rollback Durumunu Gör
+                        </a>
+
+                    {% else %}
+
+                        <a
+                            href="{{ url_for(
+                                'script_execution.rollback_execution',
+                                execution_id=execution.id
+                            ) }}"
+                            class="btn btn-danger"
+                        >
+                            Rollback Önizle
+                        </a>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block page_scripts %}
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/script_execution_detail.js'
+    ) }}"
+></script>
+
+{% endblock %}

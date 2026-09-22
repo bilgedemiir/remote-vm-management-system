@@ -1,0 +1,504 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if active_count > 0 %}
+
+<div
+    id="batchAutoRefresh"
+    data-refresh-interval="5000"
+    hidden
+>
+</div>
+
+{% endif %}
+
+
+<div class="batch-page-header">
+
+    <div>
+
+        <span class="page-eyebrow">
+            Toplu Çalıştırma
+        </span>
+
+        <h2 class="mb-1">
+            Toplu Script Sonucu
+        </h2>
+
+        <p class="text-muted mb-0">
+            Batch
+            <strong>
+                #{{ batch.id }}
+            </strong>
+            içerisindeki istemci sonuçlarını takip edin.
+        </p>
+
+    </div>
+
+    <div class="batch-header-actions">
+
+        <button
+            type="button"
+            class="btn btn-outline-primary"
+            id="refreshBatchButton"
+        >
+            Yenile
+        </button>
+
+        <a
+            href="{{ url_for(
+                'script_execution.execute_script_central'
+            ) }}"
+            class="btn btn-primary"
+        >
+            Yeni Script
+        </a>
+
+    </div>
+
+</div>
+
+
+<div class="row g-3 mb-4">
+
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="card batch-metric-card h-100">
+
+            <div class="card-body">
+
+                <div class="batch-metric-heading">
+
+                    <span class="batch-metric-mark metric-icon-primary">
+                        ALL
+                    </span>
+
+                    <span>
+                        Toplam
+                    </span>
+
+                </div>
+
+                <strong class="batch-metric-value">
+                    {{ executions | length }}
+                </strong>
+
+                <small>
+                    Oluşturulan çalıştırma kaydı
+                </small>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="card batch-metric-card h-100">
+
+            <div class="card-body">
+
+                <div class="batch-metric-heading">
+
+                    <span class="batch-metric-mark metric-icon-success">
+                        OK
+                    </span>
+
+                    <span>
+                        Tamamlanan
+                    </span>
+
+                </div>
+
+                <strong class="batch-metric-value text-success">
+                    {{ completed_count }}
+                </strong>
+
+                <small>
+                    Başarıyla tamamlanan işlemler
+                </small>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="card batch-metric-card h-100">
+
+            <div class="card-body">
+
+                <div class="batch-metric-heading">
+
+                    <span class="batch-metric-mark metric-icon-primary">
+                        RUN
+                    </span>
+
+                    <span>
+                        Devam Eden
+                    </span>
+
+                </div>
+
+                <strong class="batch-metric-value text-primary">
+                    {{ active_count }}
+                </strong>
+
+                <small>
+                    Bekleyen veya çalışan işlemler
+                </small>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="card batch-metric-card h-100">
+
+            <div class="card-body">
+
+                <div class="batch-metric-heading">
+
+                    <span class="batch-metric-mark metric-icon-danger">
+                        ERR
+                    </span>
+
+                    <span>
+                        Başarısız
+                    </span>
+
+                </div>
+
+                <strong class="batch-metric-value text-danger">
+                    {{ failed_count }}
+                </strong>
+
+                <small>
+                    Hata ile sonuçlanan işlemler
+                </small>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="card batch-results-card mb-4">
+
+    <div class="card-header">
+
+        <div>
+
+            <h5 class="mb-1">
+                İstemci Sonuçları
+            </h5>
+
+            <p class="text-muted small mb-0">
+                Her istemci için oluşturulan çalıştırma
+                kaydı ayrı olarak gösterilir.
+            </p>
+
+        </div>
+
+        {% if overall_status == "running" %}
+
+            <span class="status-badge status-running">
+                Devam Ediyor
+            </span>
+
+        {% elif overall_status == "failed" %}
+
+            <span class="status-badge status-failed">
+                Hatalı İşlem Var
+            </span>
+
+        {% else %}
+
+            <span class="status-badge status-completed">
+                Tamamlandı
+            </span>
+
+        {% endif %}
+
+    </div>
+
+    {% if active_count > 0 %}
+
+        <div class="batch-refresh-notice">
+
+            <span class="batch-refresh-indicator">
+            </span>
+
+            Sonuçlar 5 saniyede bir otomatik yenileniyor.
+
+        </div>
+
+    {% endif %}
+
+    <div class="card-body p-0">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead>
+
+                    <tr>
+                        <th class="ps-4">
+                            İstemci
+                        </th>
+
+                        <th>
+                            IP Adresi
+                        </th>
+
+                        <th>
+                            Durum
+                        </th>
+
+                        <th>
+                            Exit Code
+                        </th>
+
+                        <th>
+                            Süre
+                        </th>
+
+                        <th class="text-end pe-4">
+                            İşlem
+                        </th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for execution in executions %}
+
+                        <tr>
+
+                            <td class="ps-4">
+
+                                <div class="batch-client">
+
+                                    <span class="batch-client-avatar">
+
+                                        {{ execution.hostname[0] | upper
+                                            if execution.hostname
+                                            else "?"
+                                        }}
+
+                                    </span>
+
+                                    <div>
+
+                                        <strong>
+                                            {{ execution.hostname or "—" }}
+                                        </strong>
+
+                                        <small>
+                                            Execution #{{ execution.id }}
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                <code class="client-ip">
+                                    {{ execution.ip_address or "—" }}
+                                </code>
+
+                            </td>
+
+                            <td>
+
+                                {% if execution.status == "completed" %}
+
+                                    <span class="status-badge status-completed">
+                                        Tamamlandı
+                                    </span>
+
+                                {% elif execution.status == "failed" %}
+
+                                    <span class="status-badge status-failed">
+                                        Başarısız
+                                    </span>
+
+                                {% elif execution.status == "running" %}
+
+                                    <span class="status-badge status-running">
+                                        Çalışıyor
+                                    </span>
+
+                                {% elif execution.status == "assigned" %}
+
+                                    <span class="status-badge status-assigned">
+                                        Atandı
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="status-badge status-pending">
+                                        Bekliyor
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                {% if execution.exit_code is not none %}
+
+                                    <code class="exit-code">
+                                        {{ execution.exit_code }}
+                                    </code>
+
+                                {% else %}
+
+                                    <span class="text-muted">
+                                        —
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                {% if execution.duration_ms is not none %}
+
+                                    <span class="batch-duration">
+                                        {{ execution.duration_ms }} ms
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="text-muted">
+                                        —
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td class="text-end pe-4">
+
+                                <a
+                                    href="{{ url_for(
+                                        'script_execution.execution_detail',
+                                        execution_id=execution.id
+                                    ) }}"
+                                    class="btn btn-sm btn-outline-primary"
+                                >
+                                    Detay
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                    {% else %}
+
+                        <tr>
+
+                            <td
+                                colspan="6"
+                                class="py-5"
+                            >
+
+                                <div class="empty-state">
+
+                                    <span class="empty-state-mark">
+                                        &gt;_
+                                    </span>
+
+                                    <strong>
+                                        Çalıştırma kaydı bulunamadı
+                                    </strong>
+
+                                    <span>
+                                        Bu toplu çalıştırmaya ait bir
+                                        istemci sonucu bulunmuyor.
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="card batch-script-card">
+
+    <div class="card-header">
+
+        <div>
+
+            <h5 class="mb-1">
+                Çalıştırılan Script
+            </h5>
+
+            <p class="text-muted small mb-0">
+                Bu batch içerisindeki istemcilere gönderilen
+                PowerShell içeriği
+            </p>
+
+        </div>
+
+        <span class="section-count-label">
+            Salt okunur
+        </span>
+
+    </div>
+
+    <div class="card-body">
+
+        <pre class="batch-script-output">{{ script_content or "" }}</pre>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block page_scripts %}
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/script_execution_batch_detail.js'
+    ) }}"
+></script>
+
+{% endblock %}

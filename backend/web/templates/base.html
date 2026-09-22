@@ -1,45 +1,153 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
-    <title>Remote VM Management System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Uzak Sanal Makine Yönetim Sistemi</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
 </head>
 
-<body class="bg-light">
+<body>
 
 {% if session.get("user_id") %}
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="/dashboard">
-            Remote VM Management
-        </a>
 
-    <div class="navbar-nav">
+<div class="app-layout">
 
-        <a class="nav-link {% if request.endpoint == 'dashboard.dashboard' %}active fw-bold{% endif %}"
-             href="{{ url_for('dashboard.dashboard') }}">
-            Dashboard
-        </a>
+    <aside class="app-sidebar" id="appSidebar">
 
-        <a class="nav-link {% if request.endpoint == 'client.clients' %}active fw-bold{% endif %}"
-            href="{{ url_for('client.clients') }}">
-            Clients
-    </a>
+        <div class="sidebar-header">
+            <a class="sidebar-brand" href="{{ url_for('dashboard.dashboard') }}">
+                <span class="sidebar-brand-mark">VM</span>
+                <span class="sidebar-brand-text">Uzak VM Yönetimi</span>
+            </a>
 
-</div>
-        <div class="ms-auto text-white">
-            {{ session.get("username") }}
-            <a href="/logout" class="btn btn-outline-light btn-sm ms-3">Logout</a>
+            <button type="button" class="sidebar-close-button" id="sidebarCloseButton" aria-label="Menüyü kapat">
+                ×
+            </button>
         </div>
-    </div>
-</nav>
+
+        <nav class="sidebar-navigation">
+
+            {% if session.get("role_name") in ["admin", "operator"] %}
+                <a class="sidebar-link {% if request.endpoint == 'dashboard.dashboard' %}active{% endif %}"
+                   href="{{ url_for('dashboard.dashboard') }}" title="Kontrol Paneli">
+                    <span class="sidebar-link-icon">◫</span>
+                    <span class="sidebar-link-text">Kontrol Paneli</span>
+                </a>
+            {% endif %}
+
+            {% if session.get("role_name") in ["admin", "operator"] %}
+                <a class="sidebar-link {% if request.endpoint and request.endpoint.startswith('client.') %}active{% endif %}"
+                   href="{{ url_for('client.clients') }}" title="İstemciler">
+                    <span class="sidebar-link-icon">▣</span>
+                    <span class="sidebar-link-text">İstemciler</span>
+                </a>
+            {% endif %}
+
+            {% if session.get("role_name") in ["admin", "operator"] %}
+                <a class="sidebar-link {% if request.endpoint and request.endpoint.startswith('script_execution.') %}active{% endif %}"
+                   href="{{ url_for('script_execution.execute_script_central') }}" title="Scriptler">
+                    <span class="sidebar-link-icon">&gt;_</span>
+                    <span class="sidebar-link-text">Scriptler</span>
+                </a>
+            {% endif %}
+
+            {% if session.get("role_name") == "admin" %}
+                <a class="sidebar-link {% if request.endpoint and request.endpoint.startswith('groups.') %}active{% endif %}"
+                   href="{{ url_for('groups.groups') }}" title="Gruplar">
+                    <span class="sidebar-link-icon">◉</span>
+                    <span class="sidebar-link-text">Gruplar</span>
+                </a>
+            {% endif %}
+
+            {% if session.get("role_name") in ["admin", "viewer"] %}
+                <a class="sidebar-link {% if request.endpoint and request.endpoint.startswith('logs.') %}active{% endif %}"
+                   href="{{ url_for('logs.logs') }}" title="Sistem Logları">
+                    <span class="sidebar-link-icon">≡</span>
+                    <span class="sidebar-link-text">Sistem Logları</span>
+                </a>
+            {% endif %}
+
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-user-avatar">
+                    {{ session.get("username", "?")[0] | upper }}
+                </div>
+                <div class="sidebar-user-details">
+                    <span class="sidebar-user-name">{{ session.get("username") }}</span>
+                    <span class="sidebar-user-role">{{ session.get("role_name") | title }}</span>
+                </div>
+            </div>
+
+            <a href="{{ url_for('auth.logout') }}" class="sidebar-logout" title="Çıkış Yap">
+                <span class="sidebar-logout-icon">↪</span>
+                <span class="sidebar-link-text">Çıkış Yap</span>
+            </a>
+        </div>
+
+    </aside>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="app-main">
+
+        <header class="app-topbar">
+            <button type="button" class="sidebar-toggle-button" id="sidebarToggleButton" aria-label="Menüyü aç veya daralt">
+                ☰
+            </button>
+
+            <div class="topbar-title">
+                <span class="topbar-title-main">Yönetim Merkezi</span>
+                <span class="topbar-title-sub">Sistem ve istemci yönetimi</span>
+            </div>
+
+            <div class="topbar-status">
+                <span class="topbar-status-dot"></span>
+                Sistem Aktif
+            </div>
+        </header>
+
+        <main class="app-content">
+            <div class="container-fluid">
+
+{% else %}
+
+<main class="auth-layout">
+    <div class="container">
+
 {% endif %}
 
-<div class="container mt-4">
-    {% block content %}{% endblock %}
+{% block content %}
+{% endblock %}
+
+{% if session.get("user_id") %}
+
+            </div>
+        </main>
+    </div>
 </div>
+
+{% else %}
+
+    </div>
+</main>
+
+{% endif %}
+
+<script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+
+{% if session.get("user_id") %}
+<script src="{{ url_for('static', filename='js/base.js') }}"></script>
+{% endif %}
+
+{% block page_scripts %}
+{% endblock %}
 
 </body>
 </html>

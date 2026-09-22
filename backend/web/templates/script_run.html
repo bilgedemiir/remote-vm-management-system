@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>PowerShell Script Çalıştır</h2>
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <p>
+                <strong>Client:</strong>
+                {{ client.hostname }}
+            </p>
+
+            <p>
+                <strong>Durum:</strong>
+                {{ client.status }}
+            </p>
+
+            <form method="POST">
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                >
+
+                <div class="mb-3">
+                    <label
+                        for="script_content"
+                        class="form-label"
+                    >
+                        PowerShell Script
+                    </label>
+
+                    <textarea
+                        id="script_content"
+                        name="script_content"
+                        class="form-control font-monospace"
+                        rows="16"
+                        required
+                        placeholder="Get-Process"
+                    >{{ request.form.get("script_content", "") }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label
+                        for="timeout_seconds"
+                        class="form-label"
+                    >
+                        Zaman aşımı
+                    </label>
+
+                    <input
+                        id="timeout_seconds"
+                        name="timeout_seconds"
+                        type="number"
+                        class="form-control"
+                        value="300"
+                        min="1"
+                        max="3600"
+                    >
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Scripti Çalıştır
+                </button>
+
+                <a
+                    href="{{ url_for('script_execution.execution_history', client_id=client.id) }}"
+                    class="btn btn-secondary"
+                >
+                    Geçmiş
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

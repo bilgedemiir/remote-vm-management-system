@@ -2,44 +2,261 @@
 
 {% block content %}
 
-<div class="row justify-content-center align-items-center" style="min-height: 75vh;">
-    <div class="col-md-5 col-lg-4">
+<div class="login-page">
 
-        <div class="text-center mb-4">
-            <h2 class="fw-bold">Remote VM Management</h2>
-        </div>
+    <div class="login-shell">
 
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
+        <section class="login-presentation">
 
-                <h4 class="text-center mb-4">Giriş Yap</h4>
+            <div class="login-presentation-content">
+
+                <div class="login-brand">
+
+                    <span class="login-brand-mark">
+                        VM
+                    </span>
+
+                    <span class="login-brand-name">
+                        Remote VM
+                    </span>
+
+                </div>
+
+                <span class="login-security-label">
+                    Güvenli Yönetim Merkezi
+                </span>
+
+                <h1 class="login-presentation-title">
+                    Sistemlerinizi tek bir merkezden yönetin.
+                </h1>
+
+                <p class="login-presentation-description">
+                    İstemci durumlarını takip edin, PowerShell
+                    scriptlerini güvenli şekilde çalıştırın ve
+                    sistem sonuçlarını merkezi panel üzerinden
+                    görüntüleyin.
+                </p>
+
+                <div class="login-feature-list">
+
+                    <div class="login-feature">
+
+                        <span class="login-feature-icon">
+                            01
+                        </span>
+
+                        <div>
+                            <strong>
+                                Merkezi İstemci Yönetimi
+                            </strong>
+
+                            <span>
+                                Bağlı sistemleri ve durumlarını
+                                tek ekrandan takip edin.
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <div class="login-feature">
+
+                        <span class="login-feature-icon">
+                            02
+                        </span>
+
+                        <div>
+                            <strong>
+                                Güvenli Script Çalıştırma
+                            </strong>
+
+                            <span>
+                                İşlemleri kayıt altında ve
+                                kontrollü biçimde yürütün.
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <div class="login-feature">
+
+                        <span class="login-feature-icon">
+                            03
+                        </span>
+
+                        <div>
+                            <strong>
+                                Sistem ve Güvenlik Takibi
+                            </strong>
+
+                            <span>
+                                Envanter, güncelleme ve CVE
+                                sonuçlarını inceleyin.
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="login-presentation-footer">
+
+                <span class="login-status-dot">
+                </span>
+
+                Yönetim servisi erişilebilir durumda
+
+            </div>
+
+        </section>
+
+
+        <section class="login-form-section">
+
+            <div class="login-form-wrapper">
+
+                <div class="login-mobile-brand">
+
+                    <span class="login-brand-mark">
+                        VM
+                    </span>
+
+                    <span class="login-brand-name">
+                        Remote VM
+                    </span>
+
+                </div>
+
+                <div class="login-heading">
+
+                    <span class="login-heading-label">
+                        Yönetim Paneli
+                    </span>
+
+                    <h2>
+                        Tekrar hoş geldiniz
+                    </h2>
+
+                    <p>
+                        Devam etmek için kullanıcı hesabınızla
+                        güvenli giriş yapın.
+                    </p>
+
+                </div>
 
                 {% if error %}
-                    <div class="alert alert-danger">
+
+                    <div
+                        class="alert alert-danger"
+                        role="alert"
+                    >
                         {{ error }}
                     </div>
+
                 {% endif %}
 
                 <form method="POST">
-                    <div class="mb-3">
-                        <label class="form-label">Kullanıcı Adı</label>
-                        <input type="text" name="username" class="form-control" required>
-                    </div>
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                    >
 
                     <div class="mb-3">
-                        <label class="form-label">Şifre</label>
-                        <input type="password" name="password" class="form-control" required>
+
+                        <label
+                            for="username"
+                            class="form-label"
+                        >
+                            Kullanıcı Adı
+                        </label>
+
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            class="form-control form-control-lg"
+                            value="{{ username or '' }}"
+                            placeholder="Kullanıcı adınızı yazın"
+                            autocomplete="username"
+                            required
+                            autofocus
+                        >
+
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100">
-                        Giriş Yap
+                    <div class="mb-4">
+
+                        <label
+                            for="password"
+                            class="form-label"
+                        >
+                            Şifre
+                        </label>
+
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            class="form-control form-control-lg"
+                            placeholder="Şifrenizi yazın"
+                            autocomplete="current-password"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="login-turnstile">
+
+                        <div
+                            class="cf-turnstile"
+                            data-sitekey="{{ turnstile_site_key }}"
+                            data-theme="light"
+                            data-language="tr"
+                            data-action="login"
+                        >
+                        </div>
+
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary btn-lg w-100 login-submit-button"
+                    >
+                        Yönetim Paneline Giriş Yap
                     </button>
+
                 </form>
 
+                <div class="login-form-footer">
+
+                    <span class="login-lock-mark">
+                        ✓
+                    </span>
+
+                    Giriş işlemi Cloudflare Turnstile ile
+                    korunmaktadır.
+
+                </div>
+
             </div>
-        </div>
+
+        </section>
 
     </div>
+
 </div>
+
+{% endblock %}
+
+
+{% block page_scripts %}
+
+<script
+    src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+    async
+    defer
+></script>
 
 {% endblock %}

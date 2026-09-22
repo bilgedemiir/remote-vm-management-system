@@ -1,0 +1,434 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if has_active_jobs %}
+
+<div
+    id="cveBatchAutoRefresh"
+    data-refresh-interval="3000"
+    hidden
+>
+</div>
+
+{% endif %}
+
+
+{% with messages = get_flashed_messages(
+    with_categories=true
+) %}
+
+    {% if messages %}
+
+        <div class="cve-batch-alerts">
+
+            {% for category, message in messages %}
+
+                <div
+                    class="alert alert-{{ category }} alert-dismissible fade show"
+                    role="alert"
+                >
+                    {{ message }}
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Kapat"
+                    >
+                    </button>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+{% endwith %}
+
+
+<div class="cve-batch-page-header">
+
+    <div>
+
+        <span class="page-eyebrow">
+            CVE Yönetimi
+        </span>
+
+        <h2 class="mb-1">
+            Toplu Tarama Sonuçları
+        </h2>
+
+        <p class="text-muted mb-0">
+            İstemcilerin CVE tarama durumlarını ve
+            sonuçlarını ayrı ayrı görüntüleyin.
+        </p>
+
+    </div>
+
+    <div class="cve-batch-header-actions">
+
+        <button
+            type="button"
+            class="btn btn-outline-primary"
+            id="refreshCveBatchButton"
+        >
+            Yenile
+        </button>
+
+        <a
+            href="{{ url_for(
+                'client.clients'
+            ) }}"
+            class="btn btn-outline-secondary"
+        >
+            İstemcilere Dön
+        </a>
+
+    </div>
+
+</div>
+
+
+<div class="row g-3 mb-4">
+
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="card cve-batch-metric-card h-100">
+
+            <div class="card-body">
+
+                <span class="cve-batch-metric-label">
+                    Toplam İstemci
+                </span>
+
+                <strong class="cve-batch-metric-value">
+                    {{ summary.total }}
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="card cve-batch-metric-card h-100">
+
+            <div class="card-body">
+
+                <span class="cve-batch-metric-label">
+                    Tamamlanan
+                </span>
+
+                <strong class="cve-batch-metric-value text-success">
+                    {{ summary.completed }}
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="card cve-batch-metric-card h-100">
+
+            <div class="card-body">
+
+                <span class="cve-batch-metric-label">
+                    Devam Eden
+                </span>
+
+                <strong class="cve-batch-metric-value text-primary">
+                    {{ summary.pending + summary.running }}
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="card cve-batch-metric-card h-100">
+
+            <div class="card-body">
+
+                <span class="cve-batch-metric-label">
+                    Toplam CVE
+                </span>
+
+                <strong class="cve-batch-metric-value text-danger">
+                    {{ summary.total_findings }}
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="card cve-batch-results-card">
+
+    <div class="card-header">
+
+        <div>
+
+            <h5 class="mb-1">
+                İstemci Sonuçları
+            </h5>
+
+            <p class="text-muted small mb-0">
+                Her istemcinin tarama özeti ve bulunan
+                güvenlik açığı sayısı
+            </p>
+
+        </div>
+
+        <span class="cve-batch-id">
+            {{ batch_id[:8] }}
+        </span>
+
+    </div>
+
+
+    {% if has_active_jobs %}
+
+        <div class="cve-batch-refresh-notice">
+
+            <span class="cve-batch-refresh-indicator">
+            </span>
+
+            Toplu tarama devam ediyor. Sonuçlar 3 saniyede
+            bir otomatik yenileniyor.
+
+        </div>
+
+    {% endif %}
+
+
+    <div class="card-body p-0">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle mb-0">
+
+                <thead>
+
+                    <tr>
+                        <th class="ps-4">
+                            İstemci
+                        </th>
+
+                        <th>
+                            Durum
+                        </th>
+
+                        <th>
+                            Taranan
+                        </th>
+
+                        <th>
+                            Eşleşen
+                        </th>
+
+                        <th>
+                            CVE
+                        </th>
+
+                        <th>
+                            Süre
+                        </th>
+
+                        <th class="text-end pe-4">
+                            İşlem
+                        </th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for job in jobs %}
+
+                        <tr>
+
+                            <td class="ps-4">
+
+                                <div class="cve-batch-client">
+
+                                    <span class="cve-batch-client-mark">
+
+                                        {{ job.hostname[0] | upper
+                                            if job.hostname
+                                            else "?"
+                                        }}
+
+                                    </span>
+
+                                    <div>
+
+                                        <strong>
+                                            {{ job.hostname }}
+                                        </strong>
+
+                                        <small>
+                                            {{ job.ip_address or "IP yok" }}
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                {% if job.status == "completed" %}
+
+                                    <span class="status-badge status-completed">
+                                        Tamamlandı
+                                    </span>
+
+                                {% elif job.status == "failed" %}
+
+                                    <span class="status-badge status-failed">
+                                        Başarısız
+                                    </span>
+
+                                {% elif job.status == "running" %}
+
+                                    <span class="status-badge status-running">
+                                        Taranıyor
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="status-badge status-pending">
+                                        Bekliyor
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+                                {{ job.scanned_apps }}
+                            </td>
+
+                            <td>
+                                {{ job.matched_apps }}
+                            </td>
+
+                            <td>
+
+                                <span class="cve-batch-finding-count">
+                                    {{ job.findings_count }}
+                                </span>
+
+                            </td>
+
+                            <td>
+
+                                {% if job.duration_seconds is not none %}
+
+                                    <span class="cve-batch-duration">
+                                        {{ job.duration_seconds }} sn
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="text-muted">
+                                        —
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td class="text-end pe-4">
+
+                                {% if job.status == "completed" %}
+
+                                    <a
+                                        href="{{ url_for(
+                                            'client.client_detail',
+                                            client_id=job.client_id,
+                                            show_cves=1
+                                        ) }}#cveSection"
+                                        class="btn btn-sm btn-outline-primary"
+                                    >
+                                        CVE’leri Gör
+                                    </a>
+
+                                {% else %}
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-outline-secondary"
+                                        disabled
+                                    >
+                                        Sonuç Bekleniyor
+                                    </button>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                        {% if job.status == "failed"
+                            and job.error_message %}
+
+                            <tr>
+
+                                <td
+                                    colspan="7"
+                                    class="cve-batch-error-cell"
+                                >
+                                    <strong>
+                                        Tarama hatası:
+                                    </strong>
+
+                                    {{ job.error_message }}
+
+                                </td>
+
+                            </tr>
+
+                        {% endif %}
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block page_scripts %}
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/cve_scan_batch_detail.js'
+    ) }}"
+></script>
+
+{% endblock %}

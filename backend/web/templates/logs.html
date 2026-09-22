@@ -1,0 +1,515 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="mb-1">
+    Sistem Logları
+</h2>
+
+<p class="text-muted">
+    Sistemde gerçekleşen önemli işlemler aşağıda gösterilmektedir.
+</p>
+
+<hr>
+
+<div class="card border-0 shadow-sm mb-4">
+
+    <div class="card-body">
+
+        <form
+            method="GET"
+            action="{{ url_for('logs.logs') }}"
+        >
+            <div class="row g-3 align-items-end">
+
+                <div class="col-lg-3">
+                    <label class="form-label">
+                        Arama
+                    </label>
+
+                    <input
+                        type="text"
+                        name="search"
+                        class="form-control"
+                        value="{{ filters.search }}"
+                        placeholder="Kullanıcı, IP, client veya açıklama"
+                    >
+                </div>
+
+                <div class="col-lg-2">
+                    <label class="form-label">
+                        Log Türü
+                    </label>
+
+                    <select
+                        name="event_type"
+                        class="form-select"
+                    >
+                        <option value="">
+                            Tümü
+                        </option>
+
+                        {% for event_type in event_types %}
+                            <option
+                                value="{{ event_type }}"
+                                {% if filters.event_type == event_type %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ event_type }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-lg-2">
+                    <label class="form-label">
+                        Seviye
+                    </label>
+
+                    <select
+                        name="level"
+                        class="form-select"
+                    >
+                        <option value="">
+                            Tümü
+                        </option>
+
+                        <option
+                            value="info"
+                            {% if filters.level == "info" %}
+                                selected
+                            {% endif %}
+                        >
+                            Info
+                        </option>
+
+                        <option
+                            value="warning"
+                            {% if filters.level == "warning" %}
+                                selected
+                            {% endif %}
+                        >
+                            Warning
+                        </option>
+
+                        <option
+                            value="error"
+                            {% if filters.level == "error" %}
+                                selected
+                            {% endif %}
+                        >
+                            Error
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-lg-2">
+                    <label class="form-label">
+                        Başlangıç Tarihi
+                    </label>
+
+                    <input
+                        type="date"
+                        name="start_date"
+                        class="form-control"
+                        value="{{ filters.start_date }}"
+                    >
+                </div>
+
+                <div class="col-lg-2">
+                    <label class="form-label">
+                        Bitiş Tarihi
+                    </label>
+
+                    <input
+                        type="date"
+                        name="end_date"
+                        class="form-control"
+                        value="{{ filters.end_date }}"
+                    >
+                </div>
+
+                <div class="col-lg-1">
+                    <label class="form-label">
+                        Kayıt
+                    </label>
+
+                    <select
+                        name="per_page"
+                        class="form-select"
+                    >
+                        {% for amount in [10, 25, 50] %}
+                            <option
+                                value="{{ amount }}"
+                                {% if filters.per_page == amount %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ amount }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12">
+                    <div class="d-flex gap-2">
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                        >
+                            Filtrele
+                        </button>
+
+                        <a
+                            href="{{ url_for('logs.logs') }}"
+                            class="btn btn-outline-secondary"
+                        >
+                            Temizle
+                        </a>
+
+                    </div>
+                </div>
+
+            </div>
+        </form>
+
+    </div>
+
+</div>
+
+<div class="card shadow-sm">
+
+    <div class="card-header">
+        Log Kayıtları
+    </div>
+
+    <div class="card-body">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle mb-0">
+
+                <thead class="table-light">
+
+                    <tr>
+                        <th>ID</th>
+                        <th>Tarih</th>
+                        <th>Tür</th>
+                        <th>Seviye</th>
+                        <th>Kullanıcı</th>
+                        <th>IP</th>
+                        <th>Client</th>
+                        <th>Açıklama</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for log in logs %}
+
+                    <tr>
+
+                        <td>
+                            {{ log.id }}
+                        </td>
+
+                        <td class="text-nowrap">
+                            {{ log.created_at }}
+                        </td>
+
+                        <td class="text-nowrap">
+
+                            {% if log.log_type == "LOGIN" %}
+
+                                <span class="badge bg-success">
+                                    LOGIN
+                                </span>
+
+                            {% elif log.log_type == "LOGIN_FAILED" %}
+
+                                <span class="badge bg-danger">
+                                    LOGIN FAILED
+                                </span>
+
+                            {% elif log.log_type == "LOGOUT" %}
+
+                                <span class="badge bg-secondary">
+                                    LOGOUT
+                                </span>
+
+                            {% elif log.log_type == "CLIENT_CONNECTED" %}
+
+                                <span class="badge bg-primary">
+                                    CLIENT CONNECTED
+                                </span>
+
+                            {% elif log.log_type == "CLIENT_DISCONNECTED" %}
+
+                                <span class="badge bg-dark">
+                                    CLIENT DISCONNECTED
+                                </span>
+
+                            {% elif log.log_type == "COMMAND_SENT" %}
+
+                                <span class="badge bg-info text-dark">
+                                    COMMAND SENT
+                                </span>
+
+                            {% elif log.log_type == "COMMAND_COMPLETED" %}
+
+                                <span class="badge bg-success">
+                                    COMMAND COMPLETED
+                                </span>
+
+                            {% elif log.log_type == "COMMAND_FAILED" %}
+
+                                <span class="badge bg-danger">
+                                    COMMAND FAILED
+                                </span>
+
+                            {% elif log.log_type == "FILE_TRANSFER_COMPLETED" %}
+
+                                <span class="badge bg-success">
+                                    FILE SENT
+                                </span>
+
+                            {% elif log.log_type == "FILE_TRANSFER_FAILED" %}
+
+                                <span class="badge bg-danger">
+                                    FILE SEND FAILED
+                                </span>
+
+                            {% elif log.log_type == "FILE_RECEIVED" %}
+
+                                <span class="badge bg-primary">
+                                    FILE RECEIVED
+                                </span>
+
+                            {% elif log.log_type == "FILE_RECEIVE_FAILED" %}
+
+                                <span class="badge bg-danger">
+                                    FILE RECEIVE FAILED
+                                </span>
+
+                            {% elif log.log_type == "SCRIPT_QUEUED" %}
+
+                                <span class="badge bg-secondary">
+                                    SCRIPT QUEUED
+                                </span>
+
+                            {% elif log.log_type == "SCRIPT_STARTED" %}
+
+                                <span class="badge bg-primary">
+                                    SCRIPT STARTED
+                                </span>
+
+                            {% elif log.log_type == "SCRIPT_COMPLETED" %}
+
+                                <span class="badge bg-success">
+                                    SCRIPT COMPLETED
+                                </span>
+
+                            {% elif log.log_type == "SCRIPT_FAILED" %}
+
+                                <span class="badge bg-danger">
+                                    SCRIPT FAILED
+                                </span>
+
+                            {% elif log.log_type == "CAPTCHA_FAILED" %}
+
+                                <span class="badge bg-danger">
+                                    CAPTCHA FAILED
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-secondary">
+                                    {{ log.log_type }}
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+                            {% if log.level == "error" %}
+                                <span class="badge bg-danger">
+                                    ERROR
+                                </span>
+
+                            {% elif log.level == "warning" %}
+                                <span class="badge bg-warning text-dark">
+                                    WARNING
+                                </span>
+
+                            {% else %}
+                                <span class="badge bg-info text-dark">
+                                    INFO
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+
+                            {% if log.username %}
+                                {{ log.username }}
+                            {% else %}
+                                <span class="text-muted">
+                                    —
+                                </span>
+                            {% endif %}
+
+                        </td>
+
+                        <td class="text-nowrap">
+
+                            {% if log.ip_address %}
+                                {{ log.ip_address }}
+                            {% else %}
+                                <span class="text-muted">
+                                    —
+                                </span>
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {% if log.hostname %}
+
+                                <strong>
+                                    {{ log.hostname }}
+                                </strong>
+
+                                {% if log.client_ip_address %}
+                                    <br>
+                                    <small class="text-muted">
+                                        {{ log.client_ip_address }}
+                                    </small>
+                                {% endif %}
+
+                            {% else %}
+
+                                <span class="text-muted">
+                                    —
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td class="log-message-column">
+                            {{ log.description }}
+                        </td>
+
+                    </tr>
+
+                    {% else %}
+
+                    <tr>
+
+                        <td
+                            colspan="8"
+                            class="text-center text-muted py-4"
+                        >
+                            Henüz log kaydı bulunmuyor.
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% if pagination.total_pages > 1 %}
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
+
+            <div class="text-muted small">
+                Toplam {{ pagination.total_records }} kayıt
+                — Sayfa {{ pagination.page }}
+                / {{ pagination.total_pages }}
+            </div>
+
+            <nav aria-label="Log sayfaları">
+
+                <ul class="pagination mb-0">
+
+                    <li class="page-item {% if not pagination.has_previous %}disabled{% endif %}">
+                        <a
+                            class="page-link"
+                            href="{{ url_for(
+                                'logs.logs',
+                                page=pagination.page - 1,
+                                per_page=filters.per_page,
+                                search=filters.search,
+                                event_type=filters.event_type,
+                                level=filters.level,
+                                start_date=filters.start_date,
+                                end_date=filters.end_date
+                            ) }}"
+                        >
+                            Önceki
+                        </a>
+                    </li>
+
+                    {% for page_number in range(start_page, end_page + 1) %}
+
+                        <li class="page-item {% if page_number == pagination.page %}active{% endif %}">
+                            <a
+                                class="page-link"
+                                href="{{ url_for(
+                                    'logs.logs',
+                                    page=page_number,
+                                    per_page=filters.per_page,
+                                    search=filters.search,
+                                    event_type=filters.event_type,
+                                    level=filters.level,
+                                    start_date=filters.start_date,
+                                    end_date=filters.end_date
+                                ) }}"
+                            >
+                                {{ page_number }}
+                            </a>
+                        </li>
+
+                    {% endfor %}
+
+                    <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                        <a
+                            class="page-link"
+                            href="{{ url_for(
+                                'logs.logs',
+                                page=pagination.page + 1,
+                                per_page=filters.per_page,
+                                search=filters.search,
+                                event_type=filters.event_type,
+                                level=filters.level,
+                                start_date=filters.start_date,
+                                end_date=filters.end_date
+                            ) }}"
+                        >
+                            Sonraki
+                        </a>
+                    </li>
+
+                </ul>
+
+            </nav>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

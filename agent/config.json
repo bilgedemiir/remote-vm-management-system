@@ -1,0 +1,8 @@
+{
+    "server_host": "bilgefett",
+    "server_port": 9000,
+    "heartbeat_interval": 10,
+    "reconnect_interval": 5,
+    "port_inventory_interval": 60,
+    "agent_auth_token": "8XMK5Vvo-_De_vEzO1FG-N2cyYpNUPkBbEDRa5lDKKR9FVdrASXM9FE43rO5qB9F"
+}

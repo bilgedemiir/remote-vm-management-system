@@ -1,0 +1,564 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="script-page-header">
+
+    <div>
+
+        <span class="page-eyebrow">
+            Script Yönetimi
+        </span>
+
+        <h2 class="mb-1">
+            Yeni Script Çalıştır
+        </h2>
+
+        <p class="text-muted mb-0">
+            PowerShell scriptini hazırlayın ve çalıştırılacak
+            istemci veya grupları seçin.
+        </p>
+
+    </div>
+
+    <a
+        href="{{ url_for('dashboard.dashboard') }}"
+        class="btn btn-outline-secondary"
+    >
+        Kontrol Paneline Dön
+    </a>
+
+</div>
+
+
+{% with messages = get_flashed_messages(
+    with_categories=true
+) %}
+
+    {% if messages %}
+
+        <div class="script-page-alerts">
+
+            {% for category, message in messages %}
+
+                <div
+                    class="alert alert-{{ category }} alert-dismissible fade show"
+                    role="alert"
+                >
+                    {{ message }}
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Kapat"
+                    >
+                    </button>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+{% endwith %}
+
+
+<form
+    id="scriptForm"
+    method="POST"
+    action="{{ url_for(
+        'script_execution.execute_script_central'
+    ) }}"
+>
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="{{ csrf_token() }}"
+    >
+
+    <div class="card script-editor-card mb-4">
+
+        <div class="card-header">
+
+            <div class="script-card-heading">
+
+                <span class="script-card-mark">
+                    &gt;_
+                </span>
+
+                <div>
+
+                    <h5 class="mb-1">
+                        PowerShell Scripti
+                    </h5>
+
+                    <p class="text-muted small mb-0">
+                        Çalıştırılacak script içeriğini yazın
+                        veya yapıştırın.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <span class="section-count-label">
+                PowerShell
+            </span>
+
+        </div>
+
+        <div class="card-body">
+
+            <label
+                for="script_content"
+                class="form-label"
+            >
+                Script İçeriği
+            </label>
+
+            <textarea
+                class="form-control font-monospace script-editor"
+                id="script_content"
+                name="script_content"
+                rows="14"
+                spellcheck="false"
+                placeholder="# PowerShell scriptinizi buraya yazın"
+                required
+            >{{ script_content or "" }}</textarea>
+
+            <div class="script-editor-footer">
+
+                <span>
+                    Script, seçilen her istemci için ayrı bir
+                    çalıştırma kaydı oluşturur.
+                </span>
+
+                <span id="scriptCharacterCount">
+                    0 karakter
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="card script-target-card mb-4">
+
+        <div class="card-header">
+
+            <div>
+
+                <h5 class="mb-1">
+                    Hedef Gruplar
+                </h5>
+
+                <p class="text-muted small mb-0">
+                    Bir veya birden fazla istemci grubu
+                    seçebilirsiniz.
+                </p>
+
+            </div>
+
+            <span
+                id="selectedGroupCount"
+                class="section-count-label"
+            >
+                0 grup seçildi
+            </span>
+
+        </div>
+
+        <div class="card-body">
+
+            {% if groups %}
+
+                <div class="script-group-grid">
+
+                    {% for group in groups %}
+
+                        <div class="script-group-option">
+
+                            <input
+                                class="form-check-input group-checkbox"
+                                type="checkbox"
+                                name="group_ids"
+                                value="{{ group.id }}"
+                                id="group_{{ group.id }}"
+                                autocomplete="off"
+                                {% if group.id in selected_group_ids %}
+                                    checked
+                                {% endif %}
+                            >
+
+                            <label
+                                for="group_{{ group.id }}"
+                            >
+
+                                <strong>
+                                    {{ group.name }}
+                                </strong>
+
+                                <small>
+                                    {{ group.description
+                                        or "Açıklama bulunmuyor."
+                                    }}
+                                </small>
+
+                            </label>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-state py-4">
+
+                    <span class="empty-state-mark">
+                        GRP
+                    </span>
+
+                    <strong>
+                        Grup bulunmuyor
+                    </strong>
+
+                    <span>
+                        Script hedefi olarak kullanılabilecek
+                        bir grup oluşturulmamış.
+                    </span>
+
+                </div>
+
+            {% endif %}
+
+
+            <div class="all-online-target">
+
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="select_all_online"
+                    name="select_all_online"
+                    value="1"
+                    {% if select_all_online %}
+                        checked
+                    {% endif %}
+                >
+
+                <label for="select_all_online">
+
+                    <strong>
+                        Tüm çevrimiçi istemcileri dahil et
+                    </strong>
+
+                    <small>
+                        Script, bağlantısı aktif olan bütün
+                        istemcilere gönderilir.
+                    </small>
+
+                </label>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="card script-clients-card mb-4">
+
+        <div class="card-header">
+
+            <div>
+
+                <h5 class="mb-1">
+                    Hedef İstemciler
+                </h5>
+
+                <p class="text-muted small mb-0">
+                    Scriptin çalıştırılacağı istemcileri
+                    ayrı ayrı seçin.
+                </p>
+
+            </div>
+
+            <span
+                id="selectedClientCount"
+                class="section-count-label"
+            >
+                0 istemci seçildi
+            </span>
+
+        </div>
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead>
+
+                        <tr>
+                            <th class="ps-4 client-select-column">
+                                Seç
+                            </th>
+
+                            <th>
+                                İstemci
+                            </th>
+
+                            <th>
+                                IP Adresi
+                            </th>
+
+                            <th>
+                                Durum
+                            </th>
+
+                            <th class="pe-4">
+                                Son Görülme
+                            </th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for client in clients %}
+
+                            <tr class="script-client-row">
+
+                                <td class="ps-4">
+
+                                    <input
+                                        class="form-check-input client-checkbox"
+                                        type="checkbox"
+                                        name="client_ids"
+                                        value="{{ client.id }}"
+                                        data-status="{{ client.status }}"
+                                        id="client_{{ client.id }}"
+                                        {% if selected_client_id == client.id %}
+                                            checked
+                                        {% endif %}
+                                        {% if client.status != "online" %}
+                                            disabled
+                                        {% endif %}
+                                    >
+
+                                </td>
+
+                                <td>
+
+                                    <label
+                                        for="client_{{ client.id }}"
+                                        class="script-client-identity"
+                                    >
+
+                                        <span class="script-client-avatar">
+
+                                            {{ client.hostname[0] | upper
+                                                if client.hostname
+                                                else "?"
+                                            }}
+
+                                        </span>
+
+                                        <span>
+                                            <strong>
+                                                {{ client.hostname }}
+                                            </strong>
+
+                                            <small>
+                                                ID: {{ client.id }}
+                                            </small>
+                                        </span>
+
+                                    </label>
+
+                                </td>
+
+                                <td>
+
+                                    <code class="client-ip">
+                                        {{ client.ip_address or "—" }}
+                                    </code>
+
+                                </td>
+
+                                <td>
+
+                                    {% if client.status == "online" %}
+
+                                        <span class="client-status online">
+
+                                            <span class="client-status-dot">
+                                            </span>
+
+                                            Çevrimiçi
+
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="client-status offline">
+
+                                            <span class="client-status-dot">
+                                            </span>
+
+                                            Çevrimdışı
+
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                                <td class="pe-4 text-nowrap">
+                                    {{ client.last_seen or "—" }}
+                                </td>
+
+                            </tr>
+
+                        {% else %}
+
+                            <tr>
+
+                                <td
+                                    colspan="5"
+                                    class="py-5"
+                                >
+
+                                    <div class="empty-state">
+
+                                        <span class="empty-state-mark">
+                                            PC
+                                        </span>
+
+                                        <strong>
+                                            İstemci bulunmuyor
+                                        </strong>
+
+                                        <span>
+                                            Sisteme kayıtlı bir istemci
+                                            bulunmamaktadır.
+                                        </span>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        <div class="card-footer script-clients-footer">
+
+            Çevrimdışı istemciler doğrudan hedef olarak
+            seçilemez.
+
+        </div>
+
+    </div>
+
+
+    <div class="card script-submit-card mb-4">
+
+        <div class="card-body">
+
+            <div class="script-submit-layout">
+
+                <div class="script-timeout-field">
+
+                    <label
+                        for="timeout_seconds"
+                        class="form-label"
+                    >
+                        Zaman Aşımı
+                    </label>
+
+                    <div class="input-group">
+
+                        <input
+                            type="number"
+                            class="form-control"
+                            id="timeout_seconds"
+                            name="timeout_seconds"
+                            value="{{ timeout_seconds }}"
+                            min="1"
+                            max="3600"
+                            required
+                        >
+
+                        <span class="input-group-text">
+                            saniye
+                        </span>
+
+                    </div>
+
+                    <div class="form-text">
+                        En fazla 3600 saniye kullanılabilir.
+                    </div>
+
+                </div>
+
+
+                <div class="script-submit-summary">
+
+                    <div>
+
+                        <span class="script-summary-label">
+                            Seçili Hedefler
+                        </span>
+
+                        <strong id="selectedTargetSummary">
+                            Henüz hedef seçilmedi
+                        </strong>
+
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary btn-lg"
+                    >
+                        Scripti Çalıştır
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</form>
+
+{% endblock %}
+
+
+{% block page_scripts %}
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/scripts_execute.js'
+    ) }}"
+></script>
+
+{% endblock %}
