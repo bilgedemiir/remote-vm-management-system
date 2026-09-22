@@ -2822,10 +2822,6 @@ pre {
     color: var(--app-muted);
     font-size: 0.76rem;
 }
-
-
-/* SCRIPT CLIENT TARGETS */
-
 .script-clients-card
 .table {
     min-width: 850px;
