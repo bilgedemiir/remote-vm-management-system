@@ -1,7 +1,0 @@
-{
-    "server_host": "bilgefett",
-    "server_port": 9000,
-    "heartbeat_interval": 10,
-    "reconnect_interval": 5,
-    "port_inventory_interval": 60
-}
